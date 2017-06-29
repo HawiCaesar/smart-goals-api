@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/HawiCaesar/smart-goals-api.svg?branch=challenge2)](https://travis-ci.org/HawiCaesar/smart-goals-api)
 
 # Smart Goals API
 
