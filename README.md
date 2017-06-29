@@ -8,7 +8,7 @@ Smart Goals allows you to register and achieve all these feats and also
 allows you to tick off what you have done.
 
 ## Based on
-This app is built on https://github.com/HawiCaesar/smart-goals
+This app is built on [Smart Goals](https://github.com/HawiCaesar/smart-goals)
 It is a continutation only this will use a RESTFUL API and database as opposed to python data structures like lists and dictionaries as data stores
 
 ## Tests
