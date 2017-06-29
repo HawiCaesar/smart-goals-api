@@ -1,0 +1,30 @@
+a{
+	font-size:20px;
+}
+.header.clearfix{
+    padding-bottom: 40px;padding-top: 20px;
+}
+#home_button a{
+	font-size:20px;
+}
+.lead{
+	padding-bottom: 30px;
+}
+#h1_home{
+	padding-top:30px; padding-bottom: 15px;
+}
+.jumbotron{
+	text-align: center;padding-bottom: 70px;
+}
+.div-form{
+    padding-right: 200px; padding-left:200px;
+}
+.div-form-right{
+	padding-right: 200px;
+}
+.activity_description{
+    padding-bottom: 20px;
+}
+.table-navs{
+	padding-bottom: 20px;
+}

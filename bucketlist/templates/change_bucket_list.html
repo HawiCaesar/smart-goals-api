@@ -1,0 +1,9 @@
+{% extends "layouts/base_user.html" %}
+{% import "bootstrap/wtf.html" as wtf%}
+{% block title%}Smart Goals | Change Activity{%endblock%}
+{% block body %}
+	<h1 class="activity_description">Change Bucket List Name</h1>
+	<form  method="POST" action="/update-buckelist/{{ bucketlist_id }}">
+		{{ wtf.quick_form(form) }}
+	</form>
+{% endblock %}

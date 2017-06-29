@@ -1,0 +1,20 @@
+{% extends "layouts/base.html" %}
+{% import "bootstrap/wtf.html" as wtf%}
+
+
+{%block title%}Smart Goals | Login{% endblock %}
+{% block body %}
+
+<h1 class="text-center" style="padding-bottom: 20px">Smart Goals</h1>
+<p class="lead text-center">Login</p>
+
+{% for message in get_flashed_messages() %}
+    {{ message }}
+{% endfor %}
+
+<div class="div-form">
+	<form method="POST" action="/auth/">
+		{{ wtf.quick_form(form) }}
+	</form>
+</div>
+{% endblock %}

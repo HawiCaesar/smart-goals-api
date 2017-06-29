@@ -1,0 +1,54 @@
+{% extends "layouts/base_user.html" %}
+{% import "bootstrap/wtf.html" as wtf%}
+
+{% block title%}Smart Goals | My Bucketlists{%endblock%}
+{% block body %}
+<h1 class="activity_description">Hello {{ user[0] }}, these are your bucket lists</h1>
+<div class="table-navs">
+    <a href="/add-bucketlist" class="btn btn-primary">Add Bucketlist</a>
+    <div style="float:right">
+        <input class="form-control" type="text" placeholder="Search List"/>
+    </div>
+</div>
+
+{% for message in get_flashed_messages() %}
+    {{ message }}
+{% endfor %}
+
+
+{% if bucketlists %} 
+    <table class="table table-striped">
+    <thead>
+        <tr>
+            <th>#</th> 
+            <th>Bucketlist</th>
+            <th><center>More About it</center></th>
+            <th><center>Action</center></th>
+        </tr>
+    </thead>
+    <tbody> 
+            {% for bucketlist in bucketlists %}
+            <tr>
+                <th scope="row">{{ loop.index }}{% set list_index = loop.index0 %}</th> 
+                {% for key, value in bucketlist.items() %}
+                    
+                        <td><a href="/bucketlist-activities-for/{{ list_index }}">{{ key }}</a></td>
+                        <td><center>{{ value }}</center></td>
+                        
+                {% endfor %}
+                        <td>
+                            <center>
+                                <a href="/change-bucketlist/{{ list_index }}" class="btn btn-primary">Change</a>
+                                <a href="/delete-bucketlist/{{ list_index }}" class="btn btn-danger">Delete</a>
+                            </center>
+                        </td>
+            </tr>
+            {% endfor %}
+    </tbody>
+    </table>
+{% else %}
+<div class="alert alert-info" role="alert">
+  <strong>Nothing yet!</strong> Click on the "Add Bucketlist" to have a new bucketlist
+</div>
+{% endif %}
+{% endblock %}

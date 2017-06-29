@@ -1,0 +1,13 @@
+{% extends "layouts/base_user.html" %}
+{% import "bootstrap/wtf.html" as wtf%}
+
+{% block title%}Smart Goals | Add Bucketlist{%endblock%}
+{% block body %}
+	<h1 class="activity_description">Add BucketList</h1>
+	<form  method="POST" action="/create-bucketlist">
+		{{ wtf.quick_form(form) }}
+		<!--<div class="form-group row text-center">
+			<input class="btn btn-primary" type="submit" name="" value="Add Bucketlist">
+		</div>-->
+	</form>
+{% endblock %}

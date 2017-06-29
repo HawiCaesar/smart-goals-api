@@ -1,0 +1,57 @@
+{% extends "layouts/base_user.html" %}
+{% import "bootstrap/wtf.html" as wtf%}
+
+{% block title%}Smart Goals | My Bucketlists Activities{%endblock%}
+{% block body %}
+<h1 class="activity_description">Activites for {{ bucketlist_info[0] }}</h1>
+<h2></h2>
+<div class="table-navs">
+    <a href="/add-bucketlist-activity/{{ bucketlist_key }}/{{ bucketlist_info[0] }}" class="btn btn-primary">Add Activity</a>
+    <div style="float:right">
+        <input class="form-control" type="text" placeholder="Search List"/>
+    </div>
+</div>
+{% for message in get_flashed_messages() %}
+    {{ message }}
+{% endfor %}
+
+{% if activities %}
+<table class="table table-striped">
+<thead>
+    <tr>
+        <th>#</th>
+        <th><center>Bucketlist Activity</center></th>
+        <th><center>To Be Done By</center></th>
+        <th><center>Action</center></th>
+    </tr>
+</thead>
+<tbody>
+         {% for activity in activities %}
+            <tr>
+                <th>{{ loop.index }} {% set list_index = loop.index0 %}</th>
+                {% for key, value in activity.items() %}
+
+                    <td><center>{{ key }}, {% if value[0] == True %}Done with this {% else %} Waiting to achieve{% endif %}</center></td>
+                    <td><center>{{ value[1] }}</center></td>
+                    <td>
+                        <center>
+                            {% if value[0] == True %}
+                                <a title="Click to change to not done" href="/done-with-activity/{{ list_index }}/{{ bucketlist_key }}/{{ bucketlist_info[0] }}/0" class="btn btn-success">Done!</a> 
+                            {% else %}
+                                <a href="/done-with-activity/{{ list_index }}/{{ bucketlist_key }}/{{ bucketlist_info[0] }}/1" class="btn btn-primary">Yes, Done This</a>
+                            {% endif %}
+                            <a href="/change-bucketlist-activity/{{ list_index }}/{{ bucketlist_key }}/{{ bucketlist_info[0] }}" class="btn btn-primary">Change</a>
+                            <a href="/delete-bucketlist-activity/{{ list_index }}/{{ bucketlist_key }}" class="btn btn-danger">Delete</a>
+                        </center>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+</tbody>
+</table>
+{% else %}
+<div class="alert alert-info" role="alert">
+  <strong>Nothing yet!</strong> Click on the "Add Activity" to have a new bucketlist activity
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% import "bootstrap/wtf.html" as wtf%}
+{% extends "layouts/base.html" %}
+
+{%block title%}Smart Goals | Sign Up{% endblock %}
+{% block body %}
+<h1 class="text-center" style="padding-bottom: 20px">Smart Goals</h1>
+<p class="lead text-center">Sign Up Details</p>
+
+{% for message in get_flashed_messages() %}
+    {{ message }}
+{% endfor %}
+
+<div class="div-form">
+	<form method="POST" action="/sign-up/new-user">
+		{{ form.hidden_tag() }}
+		
+		{{ wtf.form_field(form.fullname) }}
+		{{ wtf.form_field(form.email) }}
+		{{ wtf.form_field(form.password) }}
+		{{ wtf.form_field(form.confirm_password) }}
+
+		<div class="form-group row text-center">
+			<input class="btn btn-primary" type="submit" name="" value="Sign Up">
+		</div>
+	</form>
+</div>
+{% endblock %}
