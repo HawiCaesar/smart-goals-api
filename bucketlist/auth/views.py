@@ -3,7 +3,7 @@ from flask.views import MethodView
 from flask import jsonify, request, make_response
 import json, hashlib
 
-class RegisterUser(MethodView):
+class RegisterUserAPI(MethodView):
 
     def post(self):
 
