@@ -6,10 +6,7 @@ from config import app_config
 # Initialize the app
 app = Flask(__name__, instance_relative_config=True)
 Bootstrap(app)
-from bucketlist import views
-
-from .auth import auth as auth_blueprint
-app.register_blueprint(auth_blueprint)
+from bucketlist import views, auth
 
 # Load the config file
 app.config.from_object(app_config['development'])
