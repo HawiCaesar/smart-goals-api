@@ -16,6 +16,9 @@ def create_application(config_name):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     database.init_app(app)
 
+    from .core_app import core_app as bucketlist_blueprint
+    app.register_blueprint(bucketlist_blueprint)
+
     return app
 
 
