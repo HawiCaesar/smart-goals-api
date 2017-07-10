@@ -1,15 +1,22 @@
 
-from flask import Flask
-from flask_bootstrap import Bootstrap
+from flask_api import FlaskAPI
+from flask_sqlalchemy import SQLAlchemy
+from bucketlist import auth
 from config import app_config
 
+# Initialise SQL-Alchemy
+database = SQLAlchemy()
+
 # Initialize the app
-app = Flask(__name__, instance_relative_config=True)
-Bootstrap(app)
-from bucketlist import views, auth
-
-# Load the config file
-app.config.from_object(app_config['development'])
 
 
-#app.config['SECRET_KEY'] = "q38FGSFDsyrefbhj54"
+def create_application(config_name):
+    app = FlaskAPI(__name__, instance_relative_config=True)
+    app.config.from_object(app_config[config_name])
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    database.init_app(app)
+
+    return app
+
+
+
