@@ -1,7 +1,6 @@
 
 from flask_api import FlaskAPI
 from flask_sqlalchemy import SQLAlchemy
-from bucketlist import auth
 from config import app_config
 
 # Initialise SQL-Alchemy
