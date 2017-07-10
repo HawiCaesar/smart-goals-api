@@ -9,7 +9,7 @@ class Bucketlist(database.Model):
 
     __tablename__ = 'bucketlists'
     id = database.Column(database.Integer, primary_key=True)
-    fullname = database.Column(database.String(255))
+    name = database.Column(database.String(255))
     date_created = database.Column(database.Time, default=database.func.current_timestamp())
     date_modified = database.Column(
         database.DateTime, default=database.func.current_timestamp(),
