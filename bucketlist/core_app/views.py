@@ -85,13 +85,13 @@ class BucketlistAPI(MethodView):
 
                 response.status_code = 404
 
-        else:
-            response = jsonify({
-                'status': 'Error',
-                'message': 'Please provide an id'
-            })
-
-            response.status_code = 405
+        # else:
+        #     response = jsonify({
+        #         'status': 'Error',
+        #         'message': 'Please provide an id'
+        #     })
+        #
+        #     response.status_code = 405
 
         return make_response(response)
 
@@ -116,11 +116,11 @@ class BucketlistAPI(MethodView):
                 })
                 response.status_code = 404
 
-        else:
-            response = jsonify({
-                'status': "Fail",
-                'message': "Please provide a bucketlist id"
-            })
-            response.status_code = 405
+        # else:
+        #     response = jsonify({
+        #         'status': "Fail",
+        #         'message': "Please provide a bucketlist id"
+        #     })
+        #     response.status_code = 405
 
         return make_response(response)
