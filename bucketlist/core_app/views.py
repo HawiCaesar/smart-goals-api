@@ -85,14 +85,6 @@ class BucketlistAPI(MethodView):
 
                 response.status_code = 404
 
-        # else:
-        #     response = jsonify({
-        #         'status': 'Error',
-        #         'message': 'Please provide an id'
-        #     })
-        #
-        #     response.status_code = 405
-
         return make_response(response)
 
     def delete(self, id=None):
@@ -115,12 +107,5 @@ class BucketlistAPI(MethodView):
                     "message": "Bucketlist does not exist"
                 })
                 response.status_code = 404
-
-        # else:
-        #     response = jsonify({
-        #         'status': "Fail",
-        #         'message': "Please provide a bucketlist id"
-        #     })
-        #     response.status_code = 405
 
         return make_response(response)
