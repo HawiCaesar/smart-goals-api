@@ -40,8 +40,6 @@ class BucketlistTestCases(TestCase):
                                       headers=self.headers)
         self.assertEqual(response.status_code, 201)
 
-        json_response = json.loads(response.data.decode('utf-8').replace("'", "\""))
-
         result = self.client().get('/v1/api/bucketlists/1')
         self.assertEqual(result.status_code, 200)
 
@@ -64,10 +62,6 @@ class BucketlistTestCases(TestCase):
 
         get_response = self.client().get('/v1/api/bucketlists/')
         self.assertEqual(get_response.status_code, 200)
-
-        # data = json.loads(get_response.data.decode('utf-8'))
-        #
-        # self.assertIn('Draw caricatures', data['name'])
 
     def test_api_bucketlist_can_be_updated(self):
         """ Update bucketlist PUT request"""
