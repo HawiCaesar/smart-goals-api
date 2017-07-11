@@ -10,7 +10,7 @@ allows you to tick off what you have done.
 
 ## Based on
 This app is built on [Smart Goals](https://github.com/HawiCaesar/smart-goals)
-It is a continutation only this will use a RESTFUL API and database as opposed to python data structures like lists and dictionaries as data stores
+It is a continuation only this will use a RESTFUL API and database as opposed to python data structures like lists and dictionaries as data stores
 
 ## Tests
 To run tests
@@ -25,6 +25,6 @@ nosetests
 
 ## Acknowledgements
 
-* Python 3.5 Documentation
+* Python 3.6 Documentation
 * Flask 0.12.2 Documentation
 * Various internet resources and Friends
