@@ -1,77 +1,204 @@
+from bucketlist import create_application, database
 import unittest
+import os, sys
+import json
 
-from bucketlist import app, classes
 
-class BucketlistSmartGoalsTestCase(unittest.TestCase):
+class BucketlistTestCases(unittest.TestCase):
+    """Bucketlist Test Cases"""
+
     def setUp(self):
-        self.tester = app.test_client(self)
-        self.user1 = classes.User()
-        self.user1_bucketlist = classes.Bucketlist()
-        classes.all_users = {} #master user list
-        classes.all_bucketlists = {} #master bucketlist list
+        self.app = create_application(config_name="testing")
+        self.client = self.app.test_client
+        self.bucketlist1 = {"name": "Travel Manenos"}
+        self.bucketlist2 = {"name": "Draw caricatures"}
+        self.bucketlist3 = {"name": "Career Things"}
+        self.bucketlist4 = {"name": "2018"}
+        self.updated_bucketlist = {"name": "2018 Milestones"}
+        self.headers = {'Content-Type': 'application/json'}
 
-    def test_user_can_make_bucketlist(self):
+        # binds app to current context
+        with self.app.app_context():
+            # create tables
+            database.create_all()
 
-        self.user1.create_user("Zach Reed", "zreed@email.com", "qaz12#@")
+    def register_user(self, email="user@test.com", password="testabcd"):
+        user_data = {
+            'email': email,
+            'password': password
+        }
+        return self.client().post('/v1/api/auth/register', data=json.dumps(user_data), headers=self.headers)
 
-        self.user1_bucketlist.create_bucketlist(classes.all_users['zreed@email.com'][1],
-                                                'Career Things',
-                                                'Goals to achieve in my career')
+    def login_user(self, email="user@test.com", password="testabcd"):
+        user_data = {
+            'email': email,
+            'password': password
+        }
+        return self.client().post('/v1/api/auth/login', data=json.dumps(user_data), headers=self.headers)
 
-        self.assertEqual(classes.all_bucketlists['zreed@email.com'],
-                         [{"Career Things":"Goals to achieve in my career"}],
-                         "Cannot create bucketlist")
+    def test_bucketlist_creation(self):
+        """ User can create a bucketlist """
 
-    def test_user_can_make_more_than_one_bucketlist(self):
+        self.register_user()
+        result = self.login_user()
+        access_token = json.loads(result.data.decode())
 
-        self.user1.create_user("John Ist", "jist@email.com", "qaz12#@")
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                                      headers={"Authorization": "Bearer " + access_token['access_token'],
+                                               "Content-Type": "application/json"})
 
-        self.user1_bucketlist.create_bucketlist(classes.all_users['jist@email.com'][1],
-                                                'Career Things',
-                                                'Goals to achieve in my career')
-        self.user1_bucketlist.create_bucketlist(classes.all_users['jist@email.com'][1],
-                                                'Travel Manenos',
-                                                'Places to travel')
+        data = json.loads(response.data.decode())
 
-        count = len(classes.all_bucketlists["jist@email.com"])
-
-        self.assertEqual(count, 2, "User cannot make more than one bucketlist")
+        self.assertEqual(response.status_code, 201)
+        self.assertIn('Bucketlist Created', data['message'], "Bucketlist not created")
 
 
-    def test_user_can_update_bucket_their_bucketlist(self):
-        self.user1.create_user("John Brown", "jbrown@email.com", "qaz12#@")
+    def test_api_can_get_bucketlist_by_id(self):
+        """ Test API can get a specific bucketlist by id """
 
-        self.user1_bucketlist.create_bucketlist(classes.all_users['jbrown@email.com'][1],
-                                                'Career Things',
-                                                'Goals to achieve in my career')
+        self.register_user()
+        result = self.login_user()
+        access_token = json.loads(result.data.decode())
 
-        self.user1_bucketlist.update_bucketlist(classes.all_users['jbrown@email.com'][1], 0,
-                                                'Career Targets',
-                                                'Target to aim for in my career')
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist4),
+                                      headers={"Authorization": "Bearer " + access_token['access_token'],
+                                               "Content-Type": "application/json"})
+        self.assertEqual(response.status_code, 201)
 
-        self.assertEqual(classes.all_bucketlists['jbrown@email.com'][0],
-                         {'Career Targets':'Target to aim for in my career'},
-                         'User cannot update their bucketlist')
+        result = self.client().get('/v1/api/bucketlists/1',
+                                   headers={"Authorization": "Bearer " + access_token['access_token'],
+                                            "Content-Type": "application/json"})
 
-    def test_user_can_delete_their_bucketlist(self):
-        self.user1.create_user("Brian Hawi", "bhawi@gmail.com", "qaz12#@")
+        self.assertEqual(result.status_code, 200)
 
-        self.user1_bucketlist.create_bucketlist(classes.all_users['bhawi@gmail.com'][1],
-                                                'Career Things',
-                                                'Goals to achieve in my career')
-        self.user1_bucketlist.create_bucketlist(classes.all_users['bhawi@gmail.com'][1],
-                                                'Travel Manenos',
-                                                'Places to travel')
+        data = json.loads(result.data.decode('utf-8'))
+        self.assertIn("2018", data['name'])
+    #
+    #
+    # def test_api_fetch_all_bucketlists(self):
+    #     """ Test API can fetch all bucketlists GET request """
+    #
+    #     response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+    #                                   headers=self.headers)
+    #
+    #     self.assertEqual(response.status_code, 201)
+    #
+    #     response2 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist3),
+    #                                    headers=self.headers)
+    #
+    #     self.assertEqual(response2.status_code, 201)
+    #
+    #     get_response = self.client().get('/v1/api/bucketlists/')
+    #     self.assertEqual(get_response.status_code, 200)
+    #
+    # def test_api_bucketlist_can_be_updated(self):
+    #     """ Update bucketlist PUT request"""
+    #
+    #     response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist4),
+    #                                   headers=self.headers)
+    #
+    #     self.assertEqual(response.status_code, 201)
+    #
+    #     put_response = self.client().put('/v1/api/bucketlists/1', data=json.dumps(self.updated_bucketlist),
+    #                                      headers=self.headers)
+    #
+    #     self.assertEqual(put_response.status_code, 200)
+    #
+    #     get_response = self.client().get('/v1/api/bucketlists/1')
+    #     self.assertEqual(get_response.status_code, 200)
+    #
+    #     data = json.loads(get_response.data.decode('utf-8'))
+    #     self.assertIn("2018 Milestones", data['name'])
+    #
+    # def test_api_bucketlist_can_be_deleted(self):
+    #     """ Delete bucketlist DELETE request """
+    #
+    #     response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+    #                                   headers=self.headers)
+    #
+    #     self.assertEqual(response.status_code, 201)
+    #
+    #     response2 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist3),
+    #                                    headers=self.headers)
+    #
+    #     self.assertEqual(response2.status_code, 201)
+    #
+    #     delete_response = self.client().delete('/v1/api/bucketlists/2')
+    #     self.assertEqual(delete_response.status_code, 200)
+    #
+    #     # Check if bucketlist has been deleted
+    #     get_response = self.client().get('/v1/api/bucketlists/2')
+    #     self.assertEqual(get_response.status_code, 404)
+    #
+    # def test_api_delete_non_existing_bucketlist(self):
+    #     """ Test Case: Delete non existing bucketlist """
+    #
+    #     response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+    #                                   headers=self.headers)
+    #
+    #     self.assertEqual(response.status_code, 201)
+    #
+    #     response2 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist3),
+    #                                    headers=self.headers)
+    #
+    #     self.assertEqual(response2.status_code, 201)
+    #
+    #     delete_response = self.client().delete('/v1/api/bucketlists/5')
+    #     self.assertEqual(delete_response.status_code, 404)
+    #
+    # def test_api_delete_bucketlist_without_id(self):
+    #     """ Test Case: delete bucketlist without id """
+    #
+    #     response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+    #                                  headers=self.headers)
+    #
+    #     self.assertEqual(response.status_code, 201)
+    #
+    #     response2 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist3),
+    #                                    headers=self.headers)
+    #
+    #     self.assertEqual(response2.status_code, 201)
+    #
+    #     self.assertEqual(response2.status_code, 201)
+    #
+    #     delete_response = self.client().delete('/v1/api/bucketlists/')
+    #     self.assertEqual(delete_response.status_code, 405)
+    #
+    # def test_api_update_non_exisiting_bucketlist(self):
+    #     """ Test Case: Update non exisiting bucketlist """
+    #
+    #     response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist4),
+    #                                   headers=self.headers)
+    #
+    #     self.assertEqual(response.status_code, 201)
+    #
+    #     put_response = self.client().put('/v1/api/bucketlists/3', data=json.dumps(self.updated_bucketlist),
+    #                                      headers=self.headers)
+    #
+    #     self.assertEqual(put_response.status_code, 404)
+    #
+    #     get_response = self.client().get('/v1/api/bucketlists/1')
+    #     self.assertEqual(get_response.status_code, 200)
+    #
+    #     # Ensure nothing has been changed in the record
+    #     data = json.loads(get_response.data.decode('utf-8'))
+    #     self.assertIn("2018", data['name'])
+    #
+    # def tearDown(self):
+    #     """ Teardown all initialized variables """
+    #     with self.app.app_context():
+    #         # drop all tables
+    #         database.session.remove()
+    #         database.drop_all()
 
-        self.user1_bucketlist.delete_bucketlist(classes.all_users['bhawi@gmail.com'][1], 0)
 
-        self.assertEqual(classes.all_bucketlists['bhawi@gmail.com'][0],
-                         {'Travel Manenos':'Places to travel'},
-                         "User cannot delete a bucketlist")
+# Make the tests conveniently executable
+if __name__ == "__main__":
+    unittest.main()
 
-    def test_user_can_delete_non_existing_bucketlist(self):
-        pass
 
-    def test_user_can_update_non_existing_bucketlist(self):
-        pass
+
+
+
+
 

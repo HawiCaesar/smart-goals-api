@@ -1,14 +1,40 @@
 
 from flask import Flask
-from flask_bootstrap import Bootstrap
+from flask_restful import Api
+from flask_sqlalchemy import SQLAlchemy
 from config import app_config
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
+
+# Initialise SQL-Alchemy
+database = SQLAlchemy()
+
+# Initialise Restful API
+api = Api()
 
 # Initialize the app
-app = Flask(__name__, instance_relative_config=True)
-Bootstrap(app)
-from bucketlist import views
 
-# Load the config file
-app.config.from_object(app_config['development'])
 
-#app.config['SECRET_KEY'] = "q38FGSFDsyrefbhj54"
+def create_application(config_name):
+    app = Flask(__name__, instance_relative_config=True)
+    app.config.from_object(app_config[config_name])
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # Register endpoints
+    from .core_app import core_app as bucketlist_blueprint
+    app.register_blueprint(bucketlist_blueprint)
+
+    from .auth import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint)
+
+    from bucketlist.models import User
+    global jwt
+    jwt = JWTManager(app)
+
+    # Make app a restful api
+    api.init_app(app)
+    database.init_app(app)
+
+    return app
+
+
+

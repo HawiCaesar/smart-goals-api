@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/HawiCaesar/smart-goals-api.svg?branch=challenge2)](https://travis-ci.org/HawiCaesar/smart-goals-api)
 
 # Smart Goals API
 
@@ -9,7 +10,7 @@ allows you to tick off what you have done.
 
 ## Based on
 This app is built on [Smart Goals](https://github.com/HawiCaesar/smart-goals)
-It is a continutation only this will use a RESTFUL API and database as opposed to python data structures like lists and dictionaries as data stores
+It is a continuation only this will use a RESTFUL API and database as opposed to python data structures like lists and dictionaries as data stores
 
 ## RESTFUL API features
 Create Read Update Delete bucketlist
@@ -27,7 +28,7 @@ nosetests
 
 ## Acknowledgements
 
-* Python 3.5 Documentation
+* Python 3.6 Documentation
 * Flask 0.12.2 Documentation
 * PostgresSQL 9.5.7
 * Various Internet resources and Friends

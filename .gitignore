@@ -3,3 +3,4 @@ bucklist/__pycache__/*
 *.pyc
 .coverage
 cover/
+.env
