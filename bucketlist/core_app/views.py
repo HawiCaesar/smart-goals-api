@@ -1,32 +1,46 @@
 from flask import request, make_response, url_for, jsonify
-from bucketlist import database
-from bucketlist.models import Bucketlist
+from bucketlist.models import Bucketlist, User
 from flask.views import MethodView
 import datetime
+from bucketlist import get_jwt_identity, jwt_required
 
 
 class BucketlistAPI(MethodView):
     """ Create Read Update Delete Bucketlist """
 
     now = datetime.datetime.now()
-
+    @jwt_required
     def post(self):
         data = request.get_json()
 
-        bucketlist = Bucketlist(name=data.get('name'))
-        bucketlist.save()  # Save bucketlist name
+        current_user = get_jwt_identity()
 
-        response = jsonify({
-            'status': "Success",
-            'message': "Bucketlist Created"
-        })
+        if current_user:
 
-        response.status_code = 201
-        return make_response(response)
+            bucketlist = Bucketlist(name=data.get('name'), created_by=current_user)
+            bucketlist.save()  # Save bucketlist name
 
+            response = jsonify({
+                'status': "Success",
+                'message': "Bucketlist Created"
+            })
+
+            response.status_code = 201
+            return make_response(response)
+
+        else:
+
+            response = {
+                'message': "You have no access token to use this resource"
+            }
+            return make_response(jsonify(response)), 401
+
+    @jwt_required
     def get(self, id=None):
 
-        if id:
+        current_user = get_jwt_identity()
+
+        if id and current_user:
 
             bucketlist = Bucketlist.query.filter_by(id=id).first()
 
@@ -45,7 +59,7 @@ class BucketlistAPI(MethodView):
 
                 response.status_code = 200
 
-        else:
+        elif current_user:
 
             bucketlists = Bucketlist.get_all()
             results = []
@@ -109,3 +123,6 @@ class BucketlistAPI(MethodView):
                 response.status_code = 404
 
         return make_response(response)
+
+class BucketlistItemAPI(MethodView):
+    pass
