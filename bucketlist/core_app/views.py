@@ -76,6 +76,7 @@ class BucketlistAPI(MethodView):
 
         return make_response(response)
 
+    @jwt_required
     def put(self, id=None):
         if id:
             bucketlist = Bucketlist.query.filter_by(id=id).first()
@@ -101,19 +102,21 @@ class BucketlistAPI(MethodView):
 
         return make_response(response)
 
-    def delete(self, id=None):
+    @jwt_required
+    def delete(self, id):
 
         if id:
             bucketlist = Bucketlist.query.filter_by(id=id).first()
 
             if bucketlist:
-                bucketlist.delete()
                 response = jsonify({
                     "status": "Success",
                     "message": "Bucketlist {} deleted".format(bucketlist.id)
                 })
 
                 response.status_code = 200
+
+                bucketlist.delete()
 
             else:
                 response = jsonify({
