@@ -15,6 +15,7 @@ class BucketlistTestCases(unittest.TestCase):
         self.bucketlist3 = {"name": "Career Things"}
         self.bucketlist4 = {"name": "2018"}
         self.updated_bucketlist = {"name": "2018 Milestones"}
+        self.headers = {'Content-Type': 'application/json'}
 
         """ Token Authentication implemented so register_user and login_user must be done in each function """
 
