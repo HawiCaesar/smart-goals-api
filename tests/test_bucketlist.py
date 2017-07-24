@@ -1,6 +1,5 @@
 from bucketlist import create_application, database
 import unittest
-import os, sys
 import json
 
 
@@ -218,9 +217,9 @@ class BucketlistTestCases(unittest.TestCase):
             database.drop_all()
 
 
-# Make the tests conveniently executable
-if __name__ == "__main__":
-    unittest.main()
+# # Make the tests conveniently executable
+# if __name__ == "__main__":
+#     unittest.main()
 
 
 
