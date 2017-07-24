@@ -11,7 +11,8 @@ class User(database.Model):
     email = database.Column(database.String(256), nullable=False, unique=True)
     password = database.Column(database.String(256), nullable=False)
     admin = database.Column(database.Boolean)
-    bucketlists = database.relationship('Bucketlist', order_by='Bucketlist.id', cascade="all, delete-orphan")
+    bucketlists = database.relationship('Bucketlist', order_by='Bucketlist.id', cascade="all, delete-orphan",
+                                        backref='user', lazy='dynamic')
 
     def __init__(self, email, admin, password=[]):
         self.email = email
@@ -24,10 +25,6 @@ class User(database.Model):
     def save(self):
         database.session.add(self)
         database.session.commit()
-
-    @staticmethod
-    def get_all():
-        return User.query.all()
 
 
 class Bucketlist(database.Model):
@@ -42,6 +39,7 @@ class Bucketlist(database.Model):
         onupdate=database.func.current_timestamp()
     )
     created_by = database.Column(database.Integer, database.ForeignKey(User.id))
+    items = database.relationship('BucketlistItem', backref='bucketlist', lazy='dynamic')
 
     def __init__(self, name, created_by):
         self.name = name
@@ -60,9 +58,44 @@ class Bucketlist(database.Model):
         database.session.commit()
 
     def __repr__(self):
-        return "<Bucketlis: {}>".format(self.name)
+        return "<Bucketlist: {}>".format(self.name)
 
 
 
-# class BucketlistActivity(database.Model):
-#     pass
+class BucketlistItem(database.Model):
+
+    __tablename__ = 'bucketlist_items'
+
+    item_id = database.Column(database.Integer, primary_key=True)
+    item_name = database.Column(database.String(255))
+    date_created = database.Column(database.Time, default=database.func.current_timestamp())
+    date_modified = database.Column(
+        database.DateTime, default=database.func.current_timestamp(),
+        onupdate=database.func.current_timestamp()
+    )
+    done = database.Column(database.Boolean, default=False)
+    complete_by = database.Column(database.DateTime)
+    bucketlist_id = database.Column(database.Integer, database.ForeignKey(Bucketlist.id))
+
+    def __init__(self, item_name, bucketlist, done, complete_by):
+        self.item_name = item_name
+        self.bucketlist_id = bucketlist
+        self.done = done
+        self.complete_by = complete_by
+
+    def save(self):
+        database.session.add(self)
+        database.session.commit()
+
+    @staticmethod
+    def get_bucketlist_items(id):
+        return BucketlistItem.query.filter_by(id=id).first()
+
+    def delete(self):
+        database.session.delete(self)
+        database.session.commit()
+
+    def __repr__(self):
+        return "<BucketlistItem: {}>".format(self.item_name)
+
+
