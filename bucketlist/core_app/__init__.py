@@ -15,10 +15,10 @@ core_app.add_url_rule('/v1/api/bucketlists/<int:id>',
                       view_func=bucketlist_view,
                       methods=['PUT', 'DELETE', 'GET'])
 
-core_app.add_url_rule('/v1/api/bucketlists/<int:id>/',
+core_app.add_url_rule('/v1/api/bucketlists/<int:id>/items/',
                       view_func=bucketlist_item_view,
                       methods=['POST', 'GET'])
 
-core_app.add_url_rule('/v1/api/bucketlists/<int:id>/<int:item_id>',
+core_app.add_url_rule('/v1/api/bucketlists/<int:id>/items/<int:item_id>',
                       view_func=bucketlist_item_view,
                       methods=['PUT', 'DELETE', 'GET'])
