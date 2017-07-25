@@ -11,11 +11,11 @@ class BucketlistTestCases(unittest.TestCase):
         self.client = self.app.test_client
         self.bucketlist1 = {"name": "Travel Manenos"}
         self.bucketlist2 = {"name": "Draw caricatures"}
-        self.bucketlist_item1 = {"item_name": "Travel to Dusseldorf, Germany", "done": False,
+        self.bucketlist_item1 = {"item_name": "Travel to Dusseldorf, Germany",
                                  "complete_by": "2018-01-03"}
-        self.bucketlist_item2 = {"item_name": "Travel to NYC, USA", "done": False, "complete_by": "2018-03-03"}
-        self.bucketlist_item3 = {"item_name": "Draw Batman", "done": False, "complete_by": "2018-05-01"}
-        self.bucketlist_item4 = {"item_name": "Draw Spiderman", "done": False, "complete_by": "2018-02-01"}
+        self.bucketlist_item2 = {"item_name": "Travel to NYC, USA", "complete_by": "2018-03-03"}
+        self.bucketlist_item3 = {"item_name": "Draw Batman", "complete_by": "2018-05-01"}
+        self.bucketlist_item4 = {"item_name": "Draw Spiderman", "complete_by": "2018-02-01"}
         self.headers = {'Content-Type': 'application/json'}
 
         """ Token Authentication implemented so register_user and login_user must be done in each function """
@@ -60,7 +60,7 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual(get_response.status_code, 200)
 
-        response_item = self.client().post('/v1/api/bucketlists/1/', data=json.dumps(self.bucketlist_item1),
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                     "Content-Type": "application/json"})
 
@@ -70,6 +70,35 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertIn("Bucketlist Item Created", data_item['message'], "Bucketlist Item not created")
 
+    def test_api_get_bucketlist_item(self):
+        """ Get Bucketlist that has been saved to database """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/1',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(response_item.status_code, 201)
+
+        get_response_item = self.client().get('/v1/api/bucketlists/1/items/',
+                                              headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                       "Content-Type": "application/json"})
+
+        self.assertEqual(get_response_item.status_code, 200)
+        data_item = json.loads(get_response_item.data.decode())
+
+        self.assertIn("Travel to NYC, USA", data_item[0]['item_name'], "Cannot fetch bucketlist Item")
 
 
 
