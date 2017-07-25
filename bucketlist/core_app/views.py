@@ -130,8 +130,9 @@ class BucketlistItemAPI(MethodView):
 
         if not bucketlist_item:
 
-            new_item = BucketlistItem(item_name=data.get('item_name'), bucketlist=bucketlist.id,
-                                      done=data.get('done'), complete_by=data.get('complete_by'))
+            new_item = BucketlistItem(item_name=data.get('item_name'), bucketlist_id=bucketlist.id,
+                                      date_created=datetime.datetime.now(), date_modified=datetime.datetime.now(),
+                                      done=False, complete_by=data.get('complete_by'))
             new_item.save()
 
             response = jsonify({
@@ -150,10 +151,61 @@ class BucketlistItemAPI(MethodView):
             response.status_code = 200
 
         return make_response(response)
-    #
-    #
-    # def get(self):
-    #     pass
+
+    @jwt_required
+    def get(self, id, item_id=None):
+
+        if id:
+            buckelist_items = BucketlistItem.query.filter_by(bucketlist_id=id).all()
+
+            if buckelist_items:
+                buckelist_item = BucketlistItem.query.filter_by(item_id=item_id).first()
+
+                if buckelist_item:
+
+                    response = jsonify({
+                        'item_name': buckelist_item.item_name,
+                        # 'date_created': buckelist_item.date_created,
+                        # 'date_modified': buckelist_item.date_modified,
+                        'done': buckelist_item.done,
+                        'complete_by': buckelist_item.complete_by,
+                        'bucketlist_id': buckelist_item.bucketlist_id
+                    })
+                    response.status_code = 200
+
+                else:
+                    all_items = []
+                    for item in buckelist_items:
+                        item_response = {
+                            'item_name': item.item_name,
+                            # 'date_created': item.date_created,
+                            # 'date_modified': item.date_modified,
+                            'done': item.done,
+                            'complete_by': item.complete_by,
+                            'bucketlist_id': item.bucketlist_id
+                        }
+                        all_items.append(item_response)
+
+                    response = jsonify(all_items)
+                    response.status_code = 200
+
+            else:
+
+                response = jsonify({
+                    "status": "Fail",
+                    "message": "No bucketlist items in bucketlist"
+                })
+                response.status_code = 404
+
+        else:
+            response = jsonify({
+                'status': 'Fail',
+                'message': 'You are not authorized to view these resources'
+            })
+            response.status_code = 401
+
+        return make_response(response)
+
     #
     # def put(self):
     #     pass
