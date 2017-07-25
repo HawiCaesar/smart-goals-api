@@ -68,20 +68,12 @@ class BucketlistItem(database.Model):
 
     item_id = database.Column(database.Integer, primary_key=True)
     item_name = database.Column(database.String(255))
-    date_created = database.Column(database.Time, default=database.func.current_timestamp())
-    date_modified = database.Column(
-        database.DateTime, default=database.func.current_timestamp(),
-        onupdate=database.func.current_timestamp()
-    )
+    date_created = database.Column(database.DateTime)
+    date_modified = database.Column(database.DateTime, onupdate=database.DateTime)
     done = database.Column(database.Boolean, default=False)
     complete_by = database.Column(database.DateTime)
     bucketlist_id = database.Column(database.Integer, database.ForeignKey(Bucketlist.id))
 
-    def __init__(self, item_name, bucketlist, done, complete_by):
-        self.item_name = item_name
-        self.bucketlist_id = bucketlist
-        self.done = done
-        self.complete_by = complete_by
 
     def save(self):
         database.session.add(self)
