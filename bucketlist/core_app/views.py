@@ -8,14 +8,14 @@ from bucketlist import get_jwt_identity, jwt_required
 class BucketlistAPI(MethodView):
     """ Create Read Update Delete Bucketlist """
 
-    now = datetime.datetime.now()
     @jwt_required
     def post(self):
+        now = datetime.datetime.now()
         data = request.get_json()
 
         current_user = get_jwt_identity()
 
-        bucketlist = Bucketlist(name=data.get('name'), created_by=current_user)
+        bucketlist = Bucketlist(name=data.get('name'), created_by=current_user, date_created=now)
         bucketlist.save()  # Save bucketlist name
 
         response = jsonify({
@@ -115,15 +115,14 @@ class BucketlistAPI(MethodView):
 
         return make_response(response)
 
+
 class BucketlistItemAPI(MethodView):
-
     """ Create Read Update Bucketlist items """
-
-    now = datetime.datetime.now()
 
     @jwt_required
     def post(self, id):
         data = request.get_json()
+        now = datetime.datetime.now()
 
         bucketlist = Bucketlist.query.filter_by(id=id).first()
         bucketlist_item = BucketlistItem.query.filter_by(item_name=data.get('item_name')).first()
@@ -131,13 +130,14 @@ class BucketlistItemAPI(MethodView):
         if not bucketlist_item:
 
             new_item = BucketlistItem(item_name=data.get('item_name'), bucketlist_id=bucketlist.id,
-                                      date_created=datetime.datetime.now(), date_modified=datetime.datetime.now(),
+                                      date_created=now, date_modified=now,
                                       done=False, complete_by=data.get('complete_by'))
             new_item.save()
 
             response = jsonify({
                 'status': "Success",
-                'message': "Bucketlist Item Created"
+                'message': "Bucketlist Item Created",
+                'now': str(now)
             })
 
             response.status_code = 201
@@ -148,7 +148,7 @@ class BucketlistItemAPI(MethodView):
                 'message': "Bucketlist Item Already Exists"
             })
 
-            response.status_code = 200
+            response.status_code = 409  # 409 means there is a conflict with db as two of the same resource exists
 
         return make_response(response)
 
@@ -159,14 +159,14 @@ class BucketlistItemAPI(MethodView):
             buckelist_items = BucketlistItem.query.filter_by(bucketlist_id=id).all()
 
             if buckelist_items:
-                buckelist_item = BucketlistItem.query.filter_by(item_id=item_id).first()
+                buckelist_item = BucketlistItem.get_bucketlist_items(item_id)
 
                 if buckelist_item:
 
                     response = jsonify({
                         'item_name': buckelist_item.item_name,
-                        # 'date_created': buckelist_item.date_created,
-                        # 'date_modified': buckelist_item.date_modified,
+                        'date_created': buckelist_item.date_created,
+                        'date_modified': buckelist_item.date_modified,
                         'done': buckelist_item.done,
                         'complete_by': buckelist_item.complete_by,
                         'bucketlist_id': buckelist_item.bucketlist_id
@@ -178,8 +178,8 @@ class BucketlistItemAPI(MethodView):
                     for item in buckelist_items:
                         item_response = {
                             'item_name': item.item_name,
-                            # 'date_created': item.date_created,
-                            # 'date_modified': item.date_modified,
+                            'date_created': item.date_created,
+                            'date_modified': item.date_modified,
                             'done': item.done,
                             'complete_by': item.complete_by,
                             'bucketlist_id': item.bucketlist_id
@@ -197,16 +197,8 @@ class BucketlistItemAPI(MethodView):
                 })
                 response.status_code = 404
 
-        else:
-            response = jsonify({
-                'status': 'Fail',
-                'message': 'You are not authorized to view these resources'
-            })
-            response.status_code = 401
-
         return make_response(response)
 
-    #
     # def put(self):
     #     pass
     #
