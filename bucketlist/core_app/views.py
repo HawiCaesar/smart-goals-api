@@ -136,8 +136,7 @@ class BucketlistItemAPI(MethodView):
 
             response = jsonify({
                 'status': "Success",
-                'message': "Bucketlist Item Created",
-                'now': str(now)
+                'message': "Bucketlist Item Created"
             })
 
             response.status_code = 201
