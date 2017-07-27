@@ -33,7 +33,7 @@ class Bucketlist(database.Model):
 
     id = database.Column(database.Integer, primary_key=True)
     name = database.Column(database.String(255))
-    date_created = database.Column(database.Time, default=database.func.current_timestamp())
+    date_created = database.Column(database.DateTime, default=database.func.current_timestamp())
     date_modified = database.Column(
         database.DateTime, default=database.func.current_timestamp(),
         onupdate=database.func.current_timestamp()
@@ -41,9 +41,10 @@ class Bucketlist(database.Model):
     created_by = database.Column(database.Integer, database.ForeignKey(User.id))
     items = database.relationship('BucketlistItem', backref='bucketlist', lazy='dynamic')
 
-    def __init__(self, name, created_by):
+    def __init__(self, name, created_by, date_created):
         self.name = name
         self.created_by = created_by
+        self.date_created = date_created
 
     def save(self):
         database.session.add(self)
@@ -68,8 +69,9 @@ class BucketlistItem(database.Model):
 
     item_id = database.Column(database.Integer, primary_key=True)
     item_name = database.Column(database.String(255))
-    date_created = database.Column(database.DateTime)
-    date_modified = database.Column(database.DateTime, onupdate=database.DateTime)
+    date_created = database.Column(database.TIMESTAMP, default=database.func.current_timestamp())
+    date_modified = database.Column(database.DateTime, default=database.func.current_timestamp(),
+                                    onupdate=database.func.current_timestamp())
     done = database.Column(database.Boolean, default=False)
     complete_by = database.Column(database.DateTime)
     bucketlist_id = database.Column(database.Integer, database.ForeignKey(Bucketlist.id))
@@ -80,8 +82,8 @@ class BucketlistItem(database.Model):
         database.session.commit()
 
     @staticmethod
-    def get_bucketlist_items(id):
-        return BucketlistItem.query.filter_by(id=id).first()
+    def get_bucketlist_items(item_id):
+        return BucketlistItem.query.filter_by(item_id=item_id).first()
 
     def delete(self):
         database.session.delete(self)
