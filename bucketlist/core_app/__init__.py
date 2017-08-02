@@ -11,6 +11,10 @@ core_app.add_url_rule('/v1/api/bucketlists/',
                       view_func=bucketlist_view,
                       methods=['POST', 'GET'])
 
+core_app.add_url_rule('/v1/api/bucketlists/start=<int:start>/limit=<int:limit>',
+                      view_func=bucketlist_view,
+                      methods=['GET'])
+
 core_app.add_url_rule('/v1/api/bucketlists/<int:id>',
                       view_func=bucketlist_view,
                       methods=['PUT', 'DELETE', 'GET'])
