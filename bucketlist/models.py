@@ -2,6 +2,7 @@ from bucketlist import database
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
+from flask import make_response, jsonify
 
 
 class User(database.Model):
@@ -52,15 +53,46 @@ class Bucketlist(database.Model):
 
     @staticmethod
     def get_all():
-        return Bucketlist.query.all()
+
+        return Bucketlist.query.paginate(page=1, per_page=int(3))
+
+
 
     def delete(self):
         database.session.delete(self)
         database.session.commit()
 
     def __repr__(self):
-        return "<Bucketlist: {}>".format(self.name)
+        return "{} - {}".format(self.id, self.name)
 
+    def get_paginated_list(url, start, limit):
+        # check if page exists
+        results = Bucketlist.query.all()
+        count = len(results)
+        if (count < start):
+            return make_response(jsonify({"status": "Fail", "message": "Page Not Found"}))
+        # make response
+        obj = {}
+        obj['start'] = start
+        obj['limit'] = limit
+        obj['count'] = count
+        # make URLs
+        # make previous url
+        if start == 1:
+            obj['previous'] = ''
+        else:
+            start_copy = max(1, start - limit)
+            limit_copy = start - 1
+            obj['previous'] = url + 'start=%d/limit=%d' % (start_copy, limit_copy)
+        # make next url
+        if start + limit > count:
+            obj['next'] = ''
+        else:
+            start_copy = start + limit
+            obj['next'] = url + 'start=%d/limit=%d' % (start_copy, limit)
+        # finally extract result according to bounds
+        obj['results'] = results[(start - 1):(start - 1 + limit)]
+        return obj
 
 
 class BucketlistItem(database.Model):
