@@ -4,7 +4,6 @@ from flask.views import MethodView
 import datetime
 from bucketlist import get_jwt_identity, jwt_required
 
-
 class BucketlistAPI(MethodView):
     """ Create Read Update Delete Bucketlist """
 
@@ -27,7 +26,11 @@ class BucketlistAPI(MethodView):
         return make_response(response)
 
     @jwt_required
-    def get(self, id=None):
+    def get(self, start=None, limit=None, id=None):
+        print("#######")
+        print(start)
+        print(limit)
+        print("#######")
 
         if id:
 
@@ -49,18 +52,24 @@ class BucketlistAPI(MethodView):
                 response.status_code = 200
 
         else:
-            bucketlists = Bucketlist.get_all()
-            results = []
+            if start is None:
+                start = 1
+                limit = 3
 
-            for bucketlist in bucketlists:
-                obj = {
+            search = Bucketlist.get_paginated_list('/v1/api/bucketlists/', start, limit)
+            print("**************")
+            print(search)
+            search_results = search['results']
+            final_list = []
+
+            for bucketlist in search_results:
+                result = {
                     'id': bucketlist.id,
                     'name': bucketlist.name
                 }
-                results.append(obj)
+                final_list.append(result)
 
-            response = jsonify(results)
-            response.status_code = 200
+            response = jsonify(final_list)
 
         return make_response(response)
 
