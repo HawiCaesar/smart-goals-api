@@ -11,11 +11,11 @@ class BucketlistTestCases(unittest.TestCase):
         self.client = self.app.test_client
         self.bucketlist1 = {"name": "Travel Manenos"}
         self.bucketlist2 = {"name": "Draw caricatures"}
-        self.bucketlist_item1 = {"item_name": "Travel to Dusseldorf, Germany",
-                                 "complete_by": "2018-01-03"}
+        self.bucketlist_item1 = {"item_name": "Travel to Dusseldorf, Germany", "complete_by": "2018-01-03"}
         self.bucketlist_item2 = {"item_name": "Travel to NYC, USA", "complete_by": "2018-03-03"}
         self.bucketlist_item3 = {"item_name": "Draw Batman", "complete_by": "2018-05-01"}
         self.bucketlist_item4 = {"item_name": "Draw Spiderman", "complete_by": "2018-02-01"}
+        self.bucketlist_item_update = {"item_name": "Draw Ed, Edd, Eddy", "done": "true", "complete_by":"2018-05-02"}
         self.headers = {'Content-Type': 'application/json'}
 
         """ Token Authentication implemented so register_user and login_user must be done in each function """
@@ -217,6 +217,207 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertIn(b"The requested URL was not found on the server", get_response_item.data, "Bucketlist has no items")
 
+    def test_api_user_can_update_bucketlist_item(self):
+        """ Test Case User can update a bucket list item PUT request"""
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/1',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        update_item = self.client().put('/v1/api/bucketlists/1/items/1', data=json.dumps(self.bucketlist_item_update),
+                                        headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                 "Content-Type": "application/json"})
+
+        self.assertEqual(update_item.status_code, 200)
+
+        get_response_item = self.client().get('/v1/api/bucketlists/1/items/1',
+                                              headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                       "Content-Type": "application/json"})
+
+        self.assertEqual(get_response_item.status_code, 200)
+        data_item = json.loads(get_response_item.data.decode())
+
+        self.assertIn("Draw Ed, Edd, Eddy", data_item['item_name'], "Bucketlist item cannot be updated")
+
+    def test_api_user_cannot_update_non_existing_bucketlist_item(self):
+        """ Test Case User cannot update a non-existing bucketlist item"""
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/1',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        update_item = self.client().put('/v1/api/bucketlists/1/items/5', data=json.dumps(self.bucketlist_item_update),
+                                        headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                 "Content-Type": "application/json"})
+
+        self.assertEqual(update_item.status_code, 404)
+
+        data_item = json.loads(update_item.data.decode())
+
+        self.assertIn("Bucketlist item does not exist", data_item['message'],
+                      "Bucketlist item cannot be updated because it is non-existed")
+
+    def test_api_user_cannot_update_bucketlist_item_of_different_bucketlist(self):
+        """ Test Case User should not be allowed to update bucketlist item of a non-existing or different bucketlist """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/1',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        update_item = self.client().put('/v1/api/bucketlists/4/items/2', data=json.dumps(self.bucketlist_item_update),
+                                        headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                 "Content-Type": "application/json"})
+
+        self.assertEqual(update_item.status_code, 404)
+
+        data_item = json.loads(update_item.data.decode())
+
+        self.assertIn("Bucketlist item does not belong to bucketlist", data_item['message'],
+                      "Cannot update bucketlist item that does not belong to bucketlist")
+
+
+
+    def test_user_can_delete_bucketlist(self):
+        """Test Case User can delete bucketlist item """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/1',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        delete_response = self.client().delete('/v1/api/bucketlists/1/items/1',
+                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                        "Content-Type": "application/json"})
+
+        self.assertEqual(delete_response.status_code, 204)
+
+
+
+    def test_user_cannot_delete_non_existing_bucketlist(self):
+        """ Test Case User cannot delete non-existing bucketlist """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/1',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        delete_response = self.client().delete('/v1/api/bucketlists/1/items/4',
+                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                        "Content-Type": "application/json"})
+
+        self.assertEqual(delete_response.status_code, 404)
+
+    def test_user_cannot_delete_bucketlist_item_of_different_bucketlist(self):
+        """ Test Case User should not be allowed to delete bucketlist item of a non-existing or different bucketlist """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/1',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        delete_response = self.client().delete('/v1/api/bucketlists/4/items/2',
+                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                        "Content-Type": "application/json"})
+
+        self.assertEqual(delete_response.status_code, 404)
+
+        data_item = json.loads(delete_response.data.decode())
+
+        self.assertIn("Bucketlist item does not belong to bucketlist", data_item['message'],
+                      "Cannot delete bucketlist item that does not belong to bucketlist")
 
 
     def tearDown(self):
