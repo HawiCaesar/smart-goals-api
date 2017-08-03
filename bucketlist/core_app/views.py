@@ -26,15 +26,15 @@ class BucketlistAPI(MethodView):
         return make_response(response)
 
     @jwt_required
-    def get(self, start=None, limit=None, id=None):
-        print("#######")
-        print(start)
-        print(limit)
-        print("#######")
+    def get(self, **kwargs):
+        start = request.args.get('start')
+        limit = request.args.get('limit')
 
-        if id:
+        current_user = get_jwt_identity()
 
-            bucketlist = Bucketlist.query.filter_by(id=id).first()
+        if kwargs.get('id') is not None:
+
+            bucketlist = Bucketlist.query.filter_by(id=kwargs['id'], created_by=current_user).first()
 
             if not bucketlist:
                 response = jsonify({
@@ -52,24 +52,23 @@ class BucketlistAPI(MethodView):
                 response.status_code = 200
 
         else:
-            if start is None:
+            if start is None and limit is None:
                 start = 1
                 limit = 3
 
-            search = Bucketlist.get_paginated_list('/v1/api/bucketlists/', start, limit)
-            print("**************")
-            print(search)
-            search_results = search['results']
+            search = Bucketlist.get_paginated_list('/v1/api/bucketlists/', current_user, int(start), int(limit))
+
             final_list = []
 
-            for bucketlist in search_results:
+            for bucketlist in search['results']:
                 result = {
                     'id': bucketlist.id,
                     'name': bucketlist.name
                 }
                 final_list.append(result)
 
-            response = jsonify(final_list)
+            response = jsonify({"previous": search['previous'], "next": search['next'], "results": final_list})
+            response.status_code = 200
 
         return make_response(response)
 
