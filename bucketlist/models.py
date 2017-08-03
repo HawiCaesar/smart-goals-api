@@ -51,13 +51,6 @@ class Bucketlist(database.Model):
         database.session.add(self)
         database.session.commit()
 
-    @staticmethod
-    def get_all():
-
-        return Bucketlist.query.paginate(page=1, per_page=int(3))
-
-
-
     def delete(self):
         database.session.delete(self)
         database.session.commit()
@@ -65,11 +58,11 @@ class Bucketlist(database.Model):
     def __repr__(self):
         return "{} - {}".format(self.id, self.name)
 
-    def get_paginated_list(url, start, limit):
+    def get_paginated_list(url, user, start, limit):
         # check if page exists
-        results = Bucketlist.query.all()
+        results = Bucketlist.query.filter_by(created_by=user).all()
         count = len(results)
-        if (count < start):
+        if count < start:
             return make_response(jsonify({"status": "Fail", "message": "Page Not Found"}))
         # make response
         obj = {}
@@ -81,15 +74,14 @@ class Bucketlist(database.Model):
         if start == 1:
             obj['previous'] = ''
         else:
-            start_copy = max(1, start - limit)
-            limit_copy = start - 1
-            obj['previous'] = url + 'start=%d/limit=%d' % (start_copy, limit_copy)
+
+            obj['previous'] = url + '?start=%d&limit=%d' % (start - 1, limit)
         # make next url
         if start + limit > count:
             obj['next'] = ''
         else:
-            start_copy = start + limit
-            obj['next'] = url + 'start=%d/limit=%d' % (start_copy, limit)
+            start_copy = start + 1
+            obj['next'] = url + '?start=%d&limit=%d' % (start_copy, limit)
         # finally extract result according to bounds
         obj['results'] = results[(start - 1):(start - 1 + limit)]
         return obj
