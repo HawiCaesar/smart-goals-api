@@ -1,5 +1,5 @@
 from flask import request, make_response, url_for, jsonify
-from bucketlist.models import Bucketlist, User, BucketlistItem
+from bucketlist.models import Bucketlist, User, BucketlistItem, database
 from flask.views import MethodView
 import datetime
 from bucketlist import get_jwt_identity, jwt_required
@@ -198,8 +198,75 @@ class BucketlistItemAPI(MethodView):
 
         return make_response(response)
 
-    # def put(self):
-    #     pass
-    #
-    # def delete(self):
-    #     pass
+    @jwt_required
+    def put(self, id, item_id):
+        data = request.get_json()
+
+        bucketlist_item = BucketlistItem.get_bucketlist_items(item_id)
+
+        if bucketlist_item:
+            if bucketlist_item.bucketlist_id == id:
+                bucketlist_item.item_name = data.get('item_name')
+
+                if data.get('done') == 'true':
+
+                    bucketlist_item.done = True
+
+                bucketlist_item.date_modified = datetime.datetime.now()
+                database.session.commit()  # update new changes
+
+                response = jsonify({
+                    "status": "Success",
+                    "message": "Bucketlist item successfully updated"
+                })
+
+                response.status_code = 200
+
+            else:
+                response = jsonify({
+                    "status": "Fail",
+                    "message": "Bucketlist item does not belong to bucketlist"
+                })
+
+                response.status_code = 404
+
+        else:
+            response = jsonify({
+                "status": "Fail",
+                "message": "Bucketlist item does not exist"
+            })
+
+            response.status_code = 404
+
+        return make_response(response)
+
+    @jwt_required
+    def delete(self, id, item_id):
+
+        bucketlist_item = BucketlistItem.get_bucketlist_items(item_id)
+
+        if bucketlist_item:
+            if bucketlist_item.bucketlist_id == id:
+
+                database.session.delete(bucketlist_item)
+                database.session.commit()
+
+                response = jsonify({})
+
+                response.status_code = 204  # Status 204 does not need a message body
+            else:
+                response = jsonify({
+                    "status": "Fail",
+                    "message": "Bucketlist item does not belong to bucketlist"
+                })
+
+                response.status_code = 404
+        else:
+            response = jsonify({
+                "status": "Fail",
+                "message": "Bucketlist item cannot be deleted as it does not exist"
+            })
+
+            response.status_code = 404
+
+        return make_response(response)
