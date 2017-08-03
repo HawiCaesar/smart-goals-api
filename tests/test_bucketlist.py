@@ -1,6 +1,7 @@
 from bucketlist import create_application, database
 import unittest
 import json
+import sys
 
 
 class BucketlistTestCases(unittest.TestCase):
@@ -93,6 +94,65 @@ class BucketlistTestCases(unittest.TestCase):
                                                   "Content-Type": "application/json"})
 
         self.assertEqual(get_response.status_code, 200)
+
+    def test_api_fetches_user_specific_bucketlists(self):
+        """ User should only access their bucketlists """
+
+        # Register different user
+        user_data = {
+            'email': 'test2@example.com',
+            'password': 'test2_password'
+        }
+
+        register_response = self.client().post('/v1/api/auth/register', data=json.dumps(user_data),
+                                               headers=self.headers)
+
+        register_result = json.loads(register_response.data.decode())
+
+        self.assertEqual(register_result['message'], "User registered successfully.")
+        self.assertEqual(register_response.status_code, 201)
+
+        # Login diferent user
+
+        login_response = self.client().post('/v1/api/auth/login', data=json.dumps(user_data),
+                                            headers=self.headers)
+
+        login_result = json.loads(login_response.data.decode())
+
+        self.assertEqual(login_result['message'], "User has logged in!")
+        self.assertEqual(login_response.status_code, 200)
+        self.assertTrue(login_result['access_token'])  # New User Access Token
+
+        # User 1 posts bucketlist
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist4),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        # User 2 posts bucketlist
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                                      headers={"Authorization": "Bearer " + login_result['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        # User 1's bucketlist
+        get_response = self.client().get('/v1/api/bucketlists/',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+        self.assertIn("2018", data['results'][0]['name'])
+
+        # User 2's bucketlist
+        get_response = self.client().get('/v1/api/bucketlists/',
+                                         headers={"Authorization": "Bearer " + login_result['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+        self.assertIn("Travel Manenos", data['results'][0]['name'])
+
 
     def test_api_bucketlist_can_be_updated(self):
         """ Update bucketlist PUT request"""
@@ -208,6 +268,104 @@ class BucketlistTestCases(unittest.TestCase):
         # Ensure nothing has been changed in the record
         data = json.loads(get_response.data.decode('utf-8'))
         self.assertIn("2018", data['name'])
+
+    def test_api_get_paginated_bucketlists(self):
+        """ Test Case User can fetch bucketlists in paginated form", 4 inserted but 3 returned"""
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response2 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response2.status_code, 201)
+
+        response3 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist3),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response3.status_code, 201)
+
+        response4 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist4),
+                                       headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                "Content-Type": "application/json"})
+
+        self.assertEqual(response4.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        # 4 bucketlists inserted but results are paginated
+        self.assertEqual(3, len(data['results']), "Fetched bucketlists cannot be paginated")
+
+
+    def test_api_bucketlist_next_and_previous_page_links(self):
+        """ The bucketlist api provide next and previous url links when pagination is done """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response2 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                       headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                "Content-Type": "application/json"})
+
+        self.assertEqual(response2.status_code, 201)
+
+        response3 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist3),
+                                       headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                "Content-Type": "application/json"})
+
+        self.assertEqual(response3.status_code, 201)
+
+        response4 = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist4),
+                                       headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                "Content-Type": "application/json"})
+
+        self.assertEqual(response4.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name":"Learn Piano"}),
+                                       headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Learn Guitar"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(3, len(data['results']), "Fetched bucketlists cannot be paginated")
+
+        get_response = self.client().get('/v1/api/bucketlists/?start=1&limit=3',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(data['next'], '/v1/api/bucketlists/?start=2&limit=3', "Next page link not provided")
+        self.assertEqual(data['previous'], '', 'Previous link should be empty for start of 1')
 
     def tearDown(self):
         """ Teardown all initialized variables and database """
