@@ -58,12 +58,19 @@ class Bucketlist(database.Model):
     def __repr__(self):
         return "{} - {}".format(self.id, self.name)
 
-    def get_paginated_list(url, user, start, limit):
+    def get_paginated_list(url, searchterm, user, start, limit):
+
+        if searchterm is None:
+            results = Bucketlist.query.filter_by(created_by=user).all()
+        else:
+            searchterm = '%'+searchterm+'%'
+            results = Bucketlist.query.filter(Bucketlist.name.like(searchterm)).filter_by(created_by=user).all()
+
         # check if page exists
-        results = Bucketlist.query.filter_by(created_by=user).all()
         count = len(results)
         if count < start:
             return make_response(jsonify({"status": "Fail", "message": "Page Not Found"}))
+
         # make response
         obj = {}
         obj['start'] = start
