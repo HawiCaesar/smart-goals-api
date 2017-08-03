@@ -29,6 +29,7 @@ class BucketlistAPI(MethodView):
     def get(self, **kwargs):
         start = request.args.get('start')
         limit = request.args.get('limit')
+        query = request.args.get('q')
 
         current_user = get_jwt_identity()
 
@@ -56,19 +57,27 @@ class BucketlistAPI(MethodView):
                 start = 1
                 limit = 3
 
-            search = Bucketlist.get_paginated_list('/v1/api/bucketlists/', current_user, int(start), int(limit))
+            search = Bucketlist.get_paginated_list('/v1/api/bucketlists/', query, current_user, int(start), int(limit))
 
             final_list = []
 
-            for bucketlist in search['results']:
-                result = {
-                    'id': bucketlist.id,
-                    'name': bucketlist.name
-                }
-                final_list.append(result)
+            try:
+                for bucketlist in search['results']:
+                    result = {
+                        'id': bucketlist.id,
+                        'name': bucketlist.name
+                    }
+                    final_list.append(result)
 
-            response = jsonify({"previous": search['previous'], "next": search['next'], "results": final_list})
-            response.status_code = 200
+                response = jsonify({"previous": search['previous'], "next": search['next'], "results": final_list})
+                response.status_code = 200
+
+            except:
+                response = jsonify({
+                    "status": "Fail",
+                    "message": "No Bucketlist matching your query was found"
+                })
+                response.status_code = 404
 
         return make_response(response)
 
