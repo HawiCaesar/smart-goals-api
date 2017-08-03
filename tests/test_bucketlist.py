@@ -367,6 +367,75 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertEqual(data['next'], '/v1/api/bucketlists/?start=2&limit=3', "Next page link not provided")
         self.assertEqual(data['previous'], '', 'Previous link should be empty for start of 1')
 
+    def test_api_search_bucketlist_works(self):
+        """ Test Case: User can pass query to search for bucketlist """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Draw Caricatures"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Draw Business Logos"}),
+                                       headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Play Drums"}),
+                                       headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "2018 Milestones"}),
+                                       headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/?q=Dr',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 200)
+
+        self.assertEqual(len(data['results']), 3, "3 results should be returned for search term 'Dr' ")
+
+    def test_api_search_bucketlist_returns_correct_message_for_no_bucketlist_found(self):
+        """ Test Case: The API should return a 'no such bucketlist is found' message when no result is found """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Draw Caricatures"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Draw Business Logos"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Play Drums"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/?q=zx',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 404)
+
+        self.assertEqual('No Bucketlist matching your query was found', data['message'], "Wrong message returned")
+
+
     def tearDown(self):
         """ Teardown all initialized variables and database """
         with self.app.app_context():
