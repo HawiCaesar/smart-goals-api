@@ -108,8 +108,8 @@ class BucketlistAPI(MethodView):
                 bucketlist.name = data.get("name")
                 bucketlist.save()
                 response = jsonify({
-                    'id': bucketlist.id,
-                    'name': bucketlist.name
+                    "status": "Success",
+                    "message": "Bucketlist successfully updated"
                 })
 
                 response.status_code = 200
@@ -178,7 +178,7 @@ class BucketlistItemAPI(MethodView):
 
         else:
             response = jsonify({
-                'status': "Success",
+                'status': "Fail",
                 'message': "Bucketlist Item Already Exists"
             })
 
