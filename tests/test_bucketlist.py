@@ -175,7 +175,10 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertEqual(get_response.status_code, 200)
 
         data = json.loads(get_response.data.decode('utf-8'))
+        put_data = json.loads(put_response.data.decode('utf-8'))
+
         self.assertIn("2018 Milestones", data['name'])
+        self.assertIn("Bucketlist successfully updated", put_data["message"])
 
     def test_api_bucketlist_can_be_deleted(self):
         """ Delete bucketlist DELETE request """
