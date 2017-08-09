@@ -435,6 +435,28 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual('No Bucketlist matching your query was found', data['message'], "Wrong message returned")
 
+    def test_api_user_cannot_create_existing_bucketlist(self):
+        """ Test Case: The API should refuse the user from recreating an existing bucketlist """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Draw Caricatures"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Draw Caricatures"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 409)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertEqual("Bucketlist already exists", data['message'], "Cannot recreate existing bucketlist")
+
+
+
+
 
     def tearDown(self):
         """ Teardown all initialized variables and database """
