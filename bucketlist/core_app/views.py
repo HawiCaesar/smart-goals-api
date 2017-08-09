@@ -14,15 +14,29 @@ class BucketlistAPI(MethodView):
 
         current_user = get_jwt_identity()
 
-        bucketlist = Bucketlist(name=data.get('name'), created_by=current_user, date_created=now)
-        bucketlist.save()  # Save bucketlist name
+        bucketlist_exists = Bucketlist.query.filter_by(name=data.get('name'), created_by=current_user).first()
 
-        response = jsonify({
-            'status': "Success",
-            'message': "Bucketlist Created"
-        })
+        if not bucketlist_exists:
 
-        response.status_code = 201
+            bucketlist = Bucketlist(name=data.get('name'), created_by=current_user, date_created=now)
+            bucketlist.save()  # Save bucketlist name
+
+            response = jsonify({
+                'status': "Success",
+                'message': "Bucketlist Created"
+            })
+
+            response.status_code = 201
+
+        else:
+
+            response = jsonify({
+                'status': "Fail",
+                'message': "Bucketlist already exists"
+            })
+
+            response.status_code = 409
+
         return make_response(response)
 
     @jwt_required
