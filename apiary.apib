@@ -1,80 +1,352 @@
 FORMAT: 1A
-HOST: http://polls.apiblueprint.org/
+HOST: http://localhost:5000/
 
-# smart-goals-api
+# Smart-Goals-API
+Smart Goals is a API for Smart Goals BucketList service.
+> Built using Flask-Restful
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+# Allowed HTTPs requests:
 
-## Questions Collection [/questions]
+#### POST : To create resource
+#### PUT : Update resource
+#### GET : Get a resource or list of resources
+#### DELETE : To delete resource
 
-### List All Questions [GET]
 
-+ Response 200 (application/json)
+# Description Of Common Server Responses:
+- 200 `OK` - the request was successful (some API calls may return 201 instead).
+- 201 `Created` - the request was successful and a resource was created.
+- 204 `No Content` - the request was successful but the response is empty e.g DELETE method returns no response.
+- 400 `Bad Request` - the request could not be understood or was missing required parameters.
+- 401 `Unauthorized` - authentication failed or user doesn't have permissions for requested operation.
+- 403 `Forbidden` - access denied.
+- 404 `Not Found` - resource was not found.
+- 405 `Method Not Allowed` - requested method is not supported for resource.
+- 409 `Conflict` - the request could not be completed due to a conflict with the current state of the resource
 
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
-            }
-        ]
+> ##The features the consumable by this API include:
+* User Registration
+* Token Based Authentication for users
+* Create, Read, Update and Delete Bucketlists for a particular user
+* Create, Read, Update and Delete Bucketlist Items in Bucketlist.
 
-### Create a New Question [POST]
 
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
+## User Sign Up [/v1/api/auth/register]
 
+### User Registration [POST]
 + Request (application/json)
 
         {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
+            "email": "docx@example.com", 
+            "password": "123456"
+        }
+    
+
++ Response 200 (application/json)
+
+        {
+            "message": "User registered successfully.",
+            "status": "Success"
+        }
+## User Authentication [/v1/api/auth/login]
+### User Login [POST]
++ Request (application/json)
+
+        {
+            "email": "docx@example.com", 
+            "password": "123456"
+        }
+    
++ Response 200 (application/json)
+
+        {
+            "access_token": "<Auth Token for docx@example.com>",
+            "message": "User has logged in!"
         }
 
-+ Response 201 (application/json)
+## Create Bucketlist & Read All Bucketlists for partiuclar user [/v1/api/bucketlists/{?start,limit,q}]
+### Create Bucketlist [POST]
+Create Non-existing Bucketlist (200), Create Existing Bucketlist (409)
++ Request (application/json)
+   + Headers
 
-    + Headers
-
-            Location: /questions/2
-
+            Authorization: Bearer <Auth Token for docx@example.com>
     + Body
 
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
+               "name": "Career Milestones"
             }
+
++ Response 201 (application/json)
+
+        {
+            "status": "Success",
+            "message": "Bucketlist Created"
+        }
+
++ Response 409 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "Bucketlist already exists"
+        }
+        
+
+### Read All Bucketlists for partiuclar user [GET]
++ Parameters
+    + start (optional) - start on specific page, 1 is default
+    + limit (optional) - limit the results, default is 3
+    + q (optional) - a search term passed by user
+
++ Request (application/json)
+   + Headers
+
+            Authorization: Bearer <Auth Token for docx@example.com>
+            
++ Response 200 (application/json)
+
+        {
+            "next": "/v1/api/bucketlists/?start=2&limit=3",
+            "previous": "",
+            "results": [
+                {
+                    "id": 1,
+                    "name": "Bunjy Jumping"
+                },
+                {
+                    "id": 2,
+                    "name": "Career Milestones"
+                },
+                {
+                    "id": 3,
+                    "name": "Books To Read"
+                }
+            ]
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "No Bucketlist matching your query was found"
+        }
+        
+
+        
+## Read, Update and Delete bucketlist for user [/v1/api/bucketlists/{id}]
++ Parameters
+    + id (number) - ID of the Bucketlist to read, update or delete
+
+
+### Read particular bucketlist [GET]
++ Request (application/json)
+   + Headers
+
+            Authorization: Bearer <Auth Token for docx@example.com>
+
++ Response 200 (application/json)
+
+        {
+            "id": 2,
+            "name": "Career Milestones"
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "Bucketlist Does Not Exist"
+        }
+
+### Update particular bucketlist [PUT]
++ Request (application/json)
+   + Headers
+
+            Authorization: Bearer <Auth Token for docx@example.com>
+    + Body
+
+            {
+               "name": "Career Achievements"
+            }
+            
++ Response 200 (application/json)
+
+        {
+            "id": 2,
+            "name": "Career Achievements"
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "Bucketlist name does not exist"
+        }
+
+
+### Delete particular bucketlist [DELETE]
++ Request (application/json)
+   + Headers
+
+            Authorization: Bearer <Auth Token for docx@example.com>
+
++ Response 200 (application/json)
+
+        {
+            "status": "Success",
+            "message": "Bucketlist 2 deleted"
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "Bucketlist Does Not Exist"
+        }
+
+
+## Create bucketlist items & Read all bucketlist items for user [/v1/api/bucketlists/{id}/items/?{start,limit,q}]
+### Create Bucketlist Item [POST]
+Create Non-existing Bucketlist Item (200), Create Existing Bucketlist Item(409)
++ Request (application/json)
+   + Headers
+
+            Authorization: Bearer <Auth Token for docx@example.com>
+    + Body
+
+            {
+               "item_name": "Achieve 20% salary increment", 
+               "complete_by": "2018-05-01"
+            }
+
++ Response 201 (application/json)
+
+        {
+            "status": "Success",
+            "message": "Bucketlist Item Created"
+        }
+        
++ Response 409 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "Bucketlist Item Already Exists"
+        }
+        
+### Read all Bucketlist Items in Bucketlist [GET]
+Read all bucketlist items without start, limit or q parameters passed
++ Parameters
+    + id (number) - ID of the Bucketlist
+    + start (optional) - start on specific page, 1 is default
+    + limit (optional) - limit the results, default is 3
+    + q (optional) - a search term passed by user
+
++ Request (application/json)
+   + Headers
+
+            Authorization: Bearer <Auth Token for docx@example.com>
+
+
++ Response 200 (application/json)
+
+        {
+            "next": "/v1/api/bucketlists/6/items/?start=2&limit=3",
+            "previous": "",
+            "results": [
+                {
+                    "bucketlist_id": 6,
+                    "complete_by": "Thu, 01 Feb 2018 00:00:00 GMT",
+                    "date_created": 2017-07-26 10:57:38.10005,
+                    "date_modified": 2017-07-26 10:58:02.085724,
+                    "done": false,
+                    "item_name": "Tana River Falls Jump"
+                },
+                {
+                    "bucketlist_id": 6,
+                    "complete_by": "Thu, 01 Feb 2018 00:00:00 GMT",
+                    "date_created": 2017-07-26 00:57:38.10005,
+                    "date_modified": "Wed, 26 Jul 2017 00:58:09 GMT",
+                    "done": false,
+                    "item_name": "Zambezi Falls Jump"
+                },
+                {
+                    "bucketlist_id": 6,
+                    "complete_by": "Thu, 01 Feb 2018 00:00:00 GMT",
+                    "date_created": 2017-07-26 14:26:38.10005,
+                    "date_modified": "Wed, 26 Jul 2017 14:26:10 GMT",
+                    "done": false,
+                    "item_name": "Jump off Bamburi bridge"
+                }
+            ]
+        }
+        
++ Response 404 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "No bucketlist item matching your query in exists"
+        }
+
+## Read, Update, Delete Bucketlist Item in Bucketlist [/v1/api/bucketlists/{id}/items/{item_id}]
++ Parameters
+    + id (number) - ID of the Bucketlist
+    + item_id (number) - ID for the bucketlist item
+
+### Read Bucketlist Item in Bucketlist [GET]
++ Request (application/json)
+   + Headers
+
+            Authorization: Bearer <Auth Token for docx@example.com>
+
++ Response 200 (application/json)
+
+        {
+            "bucketlist_id": 6,
+            "complete_by": "Thu, 01 Feb 2018 00:00:00 GMT",
+            "date_created": 2017-07-26 00:57:38.10005,
+            "date_modified": "Wed, 26 Jul 2017 00:58:09 GMT",
+            "done": false,
+            "item_name": "Zambezi Falls Jump"
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "That bucketlist item does not exist in bucketlist"
+        }
+
+### Update Bucketlist Item in Bucketlist [PUT]        
++ Request (application/json)
+   + Headers
+
+            Authorization: Bearer <Auth Token for docx@example.com>
+
++ Response 200 (application/json)
+
+        {
+            "status": "Success",
+            "message": "Bucketlist item successfully updated"
+        }
+        
++ Response 404 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "Bucketlist item does not exist"
+        }
+
+### Delete Bucketlist Item in Bucketlist [DELETE]
++ Request (application/json)
+   + Headers
+
+            Authorization: Bearer <Auth Token for docx@example.com>  
+            
++ Response 204 
+
++ Response 404 (application/json)
+
+        {
+            "status": "Fail",
+            "message": "Bucketlist item cannot be deleted as it does not exist
+        }
