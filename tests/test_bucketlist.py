@@ -95,6 +95,17 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual(get_response.status_code, 200)
 
+    def test_api_access_protected_page_without_token(self):
+        """ Test API can fetch all bucketlists GET request without token"""
+
+        get_response = self.client().get('/v1/api/bucketlists/',
+                                         headers={"Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 401)
+
+        data = json.loads(get_response.data.decode('utf-8'))
+        self.assertEqual("Missing Authorization Header", data['msg'])
+
     def test_api_fetches_user_specific_bucketlists(self):
         """ User should only access their bucketlists """
 
@@ -476,9 +487,50 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual("Bucketlist already exists", data['message'], "Cannot recreate existing bucketlist")
 
+    def test_api_cannot_post_bucketlist_without_token(self):
+        """ Test Case: User cannot POST without auth token """
 
+        post_response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                           headers={"Content-Type": "application/json"})
 
+        self.assertEqual(post_response.status_code, 401)
 
+        data = json.loads(post_response.data.decode('utf-8'))
+        self.assertEqual("Missing Authorization Header", data['msg'])
+
+    def test_api_cannot_put_bucketlist_without_token(self):
+        """ Test Case: User cannot PUT without auth token """
+
+        post_response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(post_response.status_code, 201)
+
+        put_response = self.client().put('/v1/api/bucketlists/1', data=json.dumps({"name":"Draw Caricature"}),
+                                           headers={"Content-Type": "application/json"})
+
+        self.assertEqual(put_response.status_code, 401)
+
+        data = json.loads(put_response.data.decode('utf-8'))
+        self.assertEqual("Missing Authorization Header", data['msg'])
+
+    def test_api_cannot_delete_bucketlist_without_token(self):
+        """ Test Case: User cannot DELETE without auth token """
+
+        post_response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(post_response.status_code, 201)
+
+        delete_response = self.client().delete('/v1/api/bucketlists/1',
+                                               headers={"Content-Type": "application/json"})
+
+        self.assertEqual(delete_response.status_code, 401)
+
+        data = json.loads(delete_response.data.decode('utf-8'))
+        self.assertEqual("Missing Authorization Header", data['msg'])
 
     def tearDown(self):
         """ Teardown all initialized variables and database """
