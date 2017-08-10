@@ -17,6 +17,11 @@ class BucketlistTestCases(unittest.TestCase):
         self.bucketlist_item4 = {"item_name": "Draw Spiderman", "complete_by": "2018-02-01"}
         self.bucketlist_item5 = {"item_name": "Draw Ironman", "complete_by": "2018-02-01"}
         self.bucketlist_item6 = {"item_name": "Draw Hulk", "complete_by": "2018-02-01"}
+        self.bucketlist_item7 = {"item_name": "Travel to Seychelles", "complete_by": "2018-04-03"}
+        self.bucketlist_item8 = {"item_name": "Travel to Austraila", "complete_by": "2018-05-03"}
+        self.bucketlist_item9 = {"item_name": "Travel to Japan", "complete_by": "2018-03-03"}
+        self.bucketlist_item10 = {"item_name": "Travel to Rio", "complete_by": "2019-03-03"}
+        self.bucketlist_item11 = {"item_name": "Travel to New Zealand, USA", "complete_by": "2018-03-03"}
         self.bucketlist_item_update = {"item_name": "Draw Ed, Edd, Eddy", "done": "true", "complete_by":"2018-05-02"}
         self.headers = {'Content-Type': 'application/json'}
 
@@ -569,6 +574,78 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual(data['previous'], "/v1/api/bucketlists/1/items/?start=1&limit=2", "Test has no previous link")
 
+    def test_api_basic_pagination_for_bucketlist_items(self):
+        """ Using a simple GET request on bucketlist items returns a paginated list of 5 items """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/1',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(get_response.status_code, 200)
+
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(response_item.status_code, 201)
+
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(response_item.status_code, 201)
+
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item6),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(response_item.status_code, 201)
+
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item7),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(response_item.status_code, 201)
+
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item8),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(response_item.status_code, 201)
+
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item9),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(response_item.status_code, 201)
+
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item10),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(response_item.status_code, 201)
+
+        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item11),
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
+
+        self.assertEqual(response_item.status_code, 201)
+
+        get_response = self.client().get('/v1/api/bucketlists/1/items/',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 200)
+
+        self.assertEqual(len(data['results']), 5, "5 results should be returned for simple GET")
 
     def tearDown(self):
         """ Teardown all initialized variables and database """
