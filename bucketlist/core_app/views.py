@@ -1,9 +1,8 @@
 from flask import request, make_response, url_for, jsonify
-from bucketlist.models import Bucketlist, User, BucketlistItem, database
+from bucketlist.models import Bucketlist, User, BucketlistItem, database, get_paginated_list
 from flask.views import MethodView
 import datetime
 from bucketlist import get_jwt_identity, jwt_required
-
 
 class BucketlistAPI(MethodView):
     """ Create Read Update Delete Bucketlist """
@@ -15,23 +14,42 @@ class BucketlistAPI(MethodView):
 
         current_user = get_jwt_identity()
 
-        bucketlist = Bucketlist(name=data.get('name'), created_by=current_user, date_created=now)
-        bucketlist.save()  # Save bucketlist name
+        bucketlist_exists = Bucketlist.query.filter_by(name=data.get('name'), created_by=current_user).first()
 
-        response = jsonify({
-            'status': "Success",
-            'message': "Bucketlist Created"
-        })
+        if not bucketlist_exists:
 
-        response.status_code = 201
+            bucketlist = Bucketlist(name=data.get('name'), created_by=current_user, date_created=now)
+            bucketlist.save()  # Save bucketlist name
+
+            response = jsonify({
+                'status': "Success",
+                'message': "Bucketlist Created"
+            })
+
+            response.status_code = 201
+
+        else:
+
+            response = jsonify({
+                'status': "Fail",
+                'message': "Bucketlist already exists"
+            })
+
+            response.status_code = 409
+
         return make_response(response)
 
     @jwt_required
-    def get(self, id=None):
+    def get(self, **kwargs):
+        start = request.args.get('start')
+        limit = request.args.get('limit')
+        query = request.args.get('q')
 
-        if id:
+        current_user = get_jwt_identity()
 
-            bucketlist = Bucketlist.query.filter_by(id=id).first()
+        if kwargs.get('id') is not None:
+
+            bucketlist = Bucketlist.query.filter_by(id=kwargs['id'], created_by=current_user).first()
 
             if not bucketlist:
                 response = jsonify({
@@ -49,33 +67,51 @@ class BucketlistAPI(MethodView):
                 response.status_code = 200
 
         else:
-            bucketlists = Bucketlist.get_all()
-            results = []
+            if start is None:
+                start = 1
 
-            for bucketlist in bucketlists:
-                obj = {
-                    'id': bucketlist.id,
-                    'name': bucketlist.name
-                }
-                results.append(obj)
+            if limit is None:
+                limit = 5
 
-            response = jsonify(results)
-            response.status_code = 200
+            search = get_paginated_list('/v1/api/bucketlists/', 'bucketlist',
+                                        query, current_user, '', int(start), int(limit))
+
+            final_list = []
+
+            try:
+                for bucketlist in search['results']:
+                    result = {
+                        'id': bucketlist.id,
+                        'name': bucketlist.name
+                    }
+                    final_list.append(result)
+
+                response = jsonify({"previous": search['previous'], "next": search['next'], "results": final_list})
+                response.status_code = 200
+
+            except:
+                response = jsonify({
+                    "status": "Fail",
+                    "message": "No Bucketlist matching your query was found"
+                })
+                response.status_code = 404
 
         return make_response(response)
 
     @jwt_required
     def put(self, id=None):
+        current_user = get_jwt_identity()
+
         if id:
-            bucketlist = Bucketlist.query.filter_by(id=id).first()
+            bucketlist = Bucketlist.query.filter_by(id=id, created_by=current_user).first()
             data = request.get_json()
 
             if bucketlist:
                 bucketlist.name = data.get("name")
                 bucketlist.save()
                 response = jsonify({
-                    'id': bucketlist.id,
-                    'name': bucketlist.name
+                    "status": "Success",
+                    "message": "Bucketlist successfully updated"
                 })
 
                 response.status_code = 200
@@ -92,9 +128,10 @@ class BucketlistAPI(MethodView):
 
     @jwt_required
     def delete(self, id):
+        current_user = get_jwt_identity()
 
         if id:
-            bucketlist = Bucketlist.query.filter_by(id=id).first()
+            bucketlist = Bucketlist.query.filter_by(id=id, created_by=current_user).first()
 
             if bucketlist:
                 response = jsonify({
@@ -143,7 +180,7 @@ class BucketlistItemAPI(MethodView):
 
         else:
             response = jsonify({
-                'status': "Success",
+                'status': "Fail",
                 'message': "Bucketlist Item Already Exists"
             })
 
@@ -152,47 +189,69 @@ class BucketlistItemAPI(MethodView):
         return make_response(response)
 
     @jwt_required
-    def get(self, id, item_id=None):
+    def get(self, **kwargs):
 
-        if id:
-            buckelist_items = BucketlistItem.query.filter_by(bucketlist_id=id).all()
+        start = request.args.get('start')
+        limit = request.args.get('limit')
+        query = request.args.get('q')
 
-            if buckelist_items:
-                buckelist_item = BucketlistItem.get_bucketlist_items(item_id)
+        current_user = get_jwt_identity()
 
-                if buckelist_item:
+        if kwargs.get('id') is not None and kwargs.get('item_id') is not None:
 
-                    response = jsonify({
+            buckelist_item = BucketlistItem.get_bucketlist_items(kwargs['id'], kwargs['item_id'], current_user)
+
+            if buckelist_item:
+
+                response = jsonify({
+                    'item_name': buckelist_item.item_name,
+                    'date_created': buckelist_item.date_created,
+                    'date_modified': buckelist_item.date_modified,
+                    'done': buckelist_item.done,
+                    'complete_by': buckelist_item.complete_by,
+                    'bucketlist_id': buckelist_item.bucketlist_id
+                })
+                response.status_code = 200
+
+            else:
+
+                response = jsonify({
+                    "status": "Fail",
+                    "message": "That bucketlist item does not exist in bucketlist"
+                })
+                response.status_code = 404
+
+        elif kwargs.get('id') is not None:
+
+            if start is None:
+                start = 1
+
+            if limit is None:
+                limit = 5
+
+            search = get_paginated_list('/v1/api/bucketlists/'+str(kwargs['id'])+'/items/', 'bucketlist_item',
+                                        query, current_user, kwargs['id'], int(start), int(limit))
+
+            try:
+                all_items = []
+                for buckelist_item in search['results']:
+                    item_response = {
                         'item_name': buckelist_item.item_name,
                         'date_created': buckelist_item.date_created,
                         'date_modified': buckelist_item.date_modified,
                         'done': buckelist_item.done,
                         'complete_by': buckelist_item.complete_by,
                         'bucketlist_id': buckelist_item.bucketlist_id
-                    })
-                    response.status_code = 200
+                    }
+                    all_items.append(item_response)
 
-                else:
-                    all_items = []
-                    for item in buckelist_items:
-                        item_response = {
-                            'item_name': item.item_name,
-                            'date_created': item.date_created,
-                            'date_modified': item.date_modified,
-                            'done': item.done,
-                            'complete_by': item.complete_by,
-                            'bucketlist_id': item.bucketlist_id
-                        }
-                        all_items.append(item_response)
+                response = jsonify({"previous": search['previous'], "next": search['next'], "results": all_items})
+                response.status_code = 200
 
-                    response = jsonify(all_items)
-                    response.status_code = 200
-
-            else:
-
+            except:
                 response = jsonify({
                     "status": "Fail",
-                    "message": "No bucketlist items in bucketlist"
+                    "message": "No bucketlist item matching your query in exists"
                 })
                 response.status_code = 404
 
@@ -202,33 +261,26 @@ class BucketlistItemAPI(MethodView):
     def put(self, id, item_id):
         data = request.get_json()
 
-        bucketlist_item = BucketlistItem.get_bucketlist_items(item_id)
+        current_user = get_jwt_identity()
+
+        bucketlist_item = BucketlistItem.get_bucketlist_items(id, item_id, current_user)
 
         if bucketlist_item:
-            if bucketlist_item.bucketlist_id == id:
-                bucketlist_item.item_name = data.get('item_name')
+            bucketlist_item.item_name = data.get('item_name')
 
-                if data.get('done') == 'true':
+            if data.get('done') == 'true':
 
-                    bucketlist_item.done = True
+                bucketlist_item.done = True
 
-                bucketlist_item.date_modified = datetime.datetime.now()
-                database.session.commit()  # update new changes
+            bucketlist_item.date_modified = datetime.datetime.now()
+            database.session.commit()  # update new changes
 
-                response = jsonify({
-                    "status": "Success",
-                    "message": "Bucketlist item successfully updated"
-                })
+            response = jsonify({
+                "status": "Success",
+                "message": "Bucketlist item successfully updated"
+            })
 
-                response.status_code = 200
-
-            else:
-                response = jsonify({
-                    "status": "Fail",
-                    "message": "Bucketlist item does not belong to bucketlist"
-                })
-
-                response.status_code = 404
+            response.status_code = 200
 
         else:
             response = jsonify({
@@ -243,24 +295,18 @@ class BucketlistItemAPI(MethodView):
     @jwt_required
     def delete(self, id, item_id):
 
-        bucketlist_item = BucketlistItem.get_bucketlist_items(item_id)
+        current_user = get_jwt_identity()
+
+        bucketlist_item = BucketlistItem.get_bucketlist_items(id, item_id, current_user)
 
         if bucketlist_item:
-            if bucketlist_item.bucketlist_id == id:
 
-                database.session.delete(bucketlist_item)
-                database.session.commit()
+            BucketlistItem.delete(bucketlist_item)
 
-                response = jsonify({})
+            response = jsonify({})
 
-                response.status_code = 204  # Status 204 does not need a message body
-            else:
-                response = jsonify({
-                    "status": "Fail",
-                    "message": "Bucketlist item does not belong to bucketlist"
-                })
+            response.status_code = 204  # Status 204 does not need a message body
 
-                response.status_code = 404
         else:
             response = jsonify({
                 "status": "Fail",

@@ -75,7 +75,7 @@ class AuthTestCases(unittest.TestCase):
         result = json.loads(response.data.decode())
 
         # 401(Unauthorized User)
-        #self.assertEqual(response, 401)
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(
             result['message'], "Invalid email or password, Please try again")
 
