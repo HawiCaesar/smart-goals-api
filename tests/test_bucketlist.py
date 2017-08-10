@@ -273,7 +273,7 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertIn("2018", data['name'])
 
     def test_api_get_paginated_bucketlists(self):
-        """ Test Case User can fetch bucketlists in paginated form", 4 inserted but 3 returned"""
+        """ Test Case User can fetch bucketlists in paginated form", 7 inserted but 5 returned"""
 
         response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
                                       headers={"Authorization": "Bearer " + self.access_token['access_token'],
@@ -299,6 +299,25 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual(response4.status_code, 201)
 
+        response = self.client().post('/v1/api/bucketlists/',
+                                      data=json.dumps({"name": "Things to manually make"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Cars to drive"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps({"name": "Learn Guitar"}),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
         get_response = self.client().get('/v1/api/bucketlists/',
                                          headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                   "Content-Type": "application/json"})
@@ -307,8 +326,8 @@ class BucketlistTestCases(unittest.TestCase):
 
         data = json.loads(get_response.data.decode('utf-8'))
 
-        # 4 bucketlists inserted but results are paginated
-        self.assertEqual(3, len(data['results']), "Fetched bucketlists cannot be paginated")
+        # 7 bucketlists inserted but results are paginated
+        self.assertEqual(5, len(data['results']), "Fetched bucketlists cannot be paginated")
 
 
     def test_api_bucketlist_next_and_previous_page_links(self):
@@ -358,7 +377,7 @@ class BucketlistTestCases(unittest.TestCase):
 
         data = json.loads(get_response.data.decode('utf-8'))
 
-        self.assertEqual(3, len(data['results']), "Fetched bucketlists cannot be paginated")
+        self.assertEqual(5, len(data['results']), "Fetched bucketlists cannot be paginated")
 
         get_response = self.client().get('/v1/api/bucketlists/?start=1&limit=3',
                                          headers={"Authorization": "Bearer " + self.access_token['access_token'],
