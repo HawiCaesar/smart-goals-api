@@ -101,9 +101,12 @@ def get_paginated_list(url, model, searchterm, user, bucketlist_id, start, limit
                 searchterm = '%'+searchterm+'%'
                 results = Bucketlist.query.filter(Bucketlist.name.like(searchterm)).filter_by(created_by=user).all()
 
-        elif model == 'bucketlist_item':
+        else:
             if searchterm is None:
-                results = BucketlistItem.query.filter_by(bucketlist_id=bucketlist_id).all()
+                results = BucketlistItem.query.\
+                    filter_by(bucketlist_id=bucketlist_id).\
+                    join(Bucketlist, BucketlistItem.bucketlist_id == Bucketlist.id).\
+                    filter_by(created_by=user).all()
 
             else:
                 searchterm = '%'+searchterm+'%'
