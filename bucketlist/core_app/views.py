@@ -67,9 +67,11 @@ class BucketlistAPI(MethodView):
                 response.status_code = 200
 
         else:
-            if start is None and limit is None:
+            if start is None:
                 start = 1
-                limit = 3
+
+            if limit is None:
+                limit = 5
 
             search = get_paginated_list('/v1/api/bucketlists/', 'bucketlist',
                                         query, current_user, '', int(start), int(limit))
@@ -221,9 +223,11 @@ class BucketlistItemAPI(MethodView):
 
         elif kwargs.get('id') is not None:
 
-            if start is None and limit is None:
+            if start is None:
                 start = 1
-                limit = 3
+
+            if limit is None:
+                limit = 5
 
             search = get_paginated_list('/v1/api/bucketlists/'+str(kwargs['id'])+'/items/', 'bucketlist_item',
                                         query, current_user, kwargs['id'], int(start), int(limit))
