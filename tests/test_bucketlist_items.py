@@ -799,7 +799,6 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertEqual(response_item1.status_code, 400)
         self.assertIn(b"400 Bad Request", response_item1.data)
 
-
     def test_api_cannot_allow_put_request_without_data(self):
         """ User cannot update a bucketlist item without data """
 
@@ -821,6 +820,67 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual(response_item1.status_code, 400)
         self.assertIn(b"400 Bad Request", response_item1.data)
+
+    def test_api_returns_error_message_when_start_and_limit_parameters_are_non_numbers(self):
+        """ Server returns an error message when start page and limit is not a number """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        self.assertEqual(response_item1.status_code, 201)
+
+        # Start parameter
+        get_response = self.client().get('/v1/api/bucketlists/1/items/?start=r',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 500)
+
+        self.assertEqual(data['message'], "Start Page and Limits should be numbers only",
+                         "Server should reject character in start and limit parameters")
+
+        # Limit parameter
+        get_response = self.client().get('/v1/api/bucketlists/1/items/?limit=e',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 500)
+
+        self.assertEqual(data['message'], "Start Page and Limits should be numbers only",
+                         "Server should reject character in start and limit parameters")
+
+        # Both parameters
+        get_response = self.client().get('/v1/api/bucketlists/1/items/?start=r&limit=e',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 500)
+
+        self.assertEqual(data['message'], "Start Page and Limits should be numbers only",
+                         "Server should reject character in start and limit parameters")
+
+
+
+
 
     def tearDown(self):
         """ Teardown all initialized variables and database """

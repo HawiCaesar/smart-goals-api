@@ -569,6 +569,57 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertIn(b"400 Bad Request", put_response.data)
 
+    def test_api_returns_error_message_when_start_and_limit_parameters_are_non_numbers(self):
+        """ Server returns an error message when start page and limit is not a number """
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist3),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        # Start parameter
+        get_response = self.client().get('/v1/api/bucketlists/?start=e',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 500)
+
+        self.assertEqual(data['message'], "Start Page and Limits should be numbers only",
+                         "Server should reject character in start and limit parameters")
+
+        # Limit parameter
+        get_response = self.client().get('/v1/api/bucketlists/?limit=e',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 500)
+
+        self.assertEqual(data['message'], "Start Page and Limits should be numbers only",
+                         "Server should reject character in start and limit parameters")
+
+        # Both paramters
+        get_response = self.client().get('/v1/api/bucketlists/?start=e&limit=e',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        data = json.loads(get_response.data.decode('utf-8'))
+
+        self.assertEqual(get_response.status_code, 500)
+
+        self.assertEqual(data['message'], "Start Page and Limits should be numbers only",
+                         "Server should reject character in start and limit parameters")
+
     def tearDown(self):
         """ Teardown all initialized variables and database """
         with self.app.app_context():
