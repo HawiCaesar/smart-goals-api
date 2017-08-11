@@ -56,8 +56,6 @@ class LoginAPI(MethodView):
 
                     response.status_code = 200
                     return make_response(response)
-                else:
-                    return make_response(jsonify({"message":"No identity"}))
 
             else:
                 response = jsonify({
