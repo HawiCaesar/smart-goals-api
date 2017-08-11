@@ -4,6 +4,7 @@ from flask.views import MethodView
 import datetime
 from bucketlist import get_jwt_identity, jwt_required
 
+
 class BucketlistAPI(MethodView):
     """ Create Read Update Delete Bucketlist """
 
@@ -99,7 +100,7 @@ class BucketlistAPI(MethodView):
         return make_response(response)
 
     @jwt_required
-    def put(self, id=None):
+    def put(self, id):
         current_user = get_jwt_identity()
 
         if id:
