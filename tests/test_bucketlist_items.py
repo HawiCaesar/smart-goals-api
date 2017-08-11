@@ -3,6 +3,7 @@ import unittest
 import json
 import sys
 
+
 class BucketlistTestCases(unittest.TestCase):
     pass
 
@@ -62,8 +63,8 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
 
         get_response = self.client().get('/v1/api/bucketlists/1',
-                                   headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                            "Content-Type": "application/json"})
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
 
         self.assertEqual(get_response.status_code, 200)
 
@@ -98,16 +99,15 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertEqual(response_item.status_code, 201)
 
         response_item2 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
 
         self.assertEqual(response_item2.status_code, 409)
 
         data_item = json.loads(response_item2.data.decode())
 
-        self.assertIn("Bucketlist Item Already Exists", data_item['message'], "Existing bucketlist item should not be created")
-
-
+        self.assertIn("Bucketlist Item Already Exists", data_item['message'],
+                      "Existing bucketlist item should not be created")
 
     def test_api_get_bucketlist_item(self):
         """ Get all Bucketlist items that has been saved to database """
@@ -156,15 +156,15 @@ class BucketlistTestCases(unittest.TestCase):
 
         # One Bucketlist item
         response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
 
         self.assertEqual(response_item1.status_code, 201)
 
         # Second Bucketlist item
         response_item2 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
 
         self.assertEqual(response_item2.status_code, 201)
 
@@ -223,7 +223,8 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual(get_response_item.status_code, 404)
 
-        self.assertIn(b"The requested URL was not found on the server", get_response_item.data, "Bucketlist has no items")
+        self.assertIn(b"The requested URL was not found on the server", get_response_item.data,
+                      "Bucketlist has no items")
 
     def test_api_user_can_update_bucketlist_item(self):
         """ Test Case User can update a bucket list item PUT request"""
@@ -331,8 +332,6 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertIn("Bucketlist item does not exist", data_item['message'],
                       "Cannot update bucketlist item that does not belong to bucketlist")
 
-
-
     def test_user_can_delete_bucketlist(self):
         """Test Case User can delete bucketlist item """
 
@@ -359,8 +358,6 @@ class BucketlistTestCases(unittest.TestCase):
                                                         "Content-Type": "application/json"})
 
         self.assertEqual(delete_response.status_code, 204)
-
-
 
     def test_user_cannot_delete_non_existing_bucketlist(self):
         """ Test Case User cannot delete non-existing bucketlist """
@@ -443,14 +440,14 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertEqual(get_response.status_code, 200)
 
         response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
 
         self.assertEqual(response_item.status_code, 201)
 
         response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
 
         self.assertEqual(response_item.status_code, 201)
 

@@ -3,6 +3,7 @@ from bucketlist.models import User
 from flask.views import MethodView
 from bucketlist import create_access_token
 
+
 class UserRegistrationAPI(MethodView):
     """ Register users """
 
@@ -32,6 +33,7 @@ class UserRegistrationAPI(MethodView):
             response.status_code = 202
 
         return make_response(response)
+
 
 class LoginAPI(MethodView):
     def post(self):
