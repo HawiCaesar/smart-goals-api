@@ -187,6 +187,23 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertIn("2018 Milestones", data['name'])
         self.assertIn("Bucketlist successfully updated", put_data["message"])
 
+    def test_api_bucketlist_cannot_be_updated_without_id(self):
+        """ Cannot Update bucketlist without id PUT request"""
+
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist4),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        put_response = self.client().put('/v1/api/bucketlists/', data=json.dumps(self.updated_bucketlist),
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(put_response.status_code, 405)
+
+        self.assertIn(b"405 Method Not Allowed", put_response.data, "User not allowed to update without id")
+
     def test_api_bucketlist_can_be_deleted(self):
         """ Delete bucketlist DELETE request """
 
@@ -503,7 +520,7 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertEqual(post_response.status_code, 201)
 
         put_response = self.client().put('/v1/api/bucketlists/1', data=json.dumps({"name":"Draw Caricature"}),
-                                           headers={"Content-Type": "application/json"})
+                                         headers={"Content-Type": "application/json"})
 
         self.assertEqual(put_response.status_code, 401)
 
@@ -526,6 +543,31 @@ class BucketlistTestCases(unittest.TestCase):
 
         data = json.loads(delete_response.data.decode('utf-8'))
         self.assertEqual("Missing Authorization Header", data['msg'])
+
+    def test_api_cannot_allow_post_request_without_data(self):
+        """ Server returns an error when user tries to post no data """
+        response = self.client().post('/v1/api/bucketlists/',
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"400 Bad Request", response.data)
+
+    def test_api_cannot_allow_put_request_without_data(self):
+        """ Server returns an error when user tries to put no data """
+        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                               "Content-Type": "application/json"})
+
+        self.assertEqual(response.status_code, 201)
+
+        put_response = self.client().put('/v1/api/bucketlists/1',
+                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                  "Content-Type": "application/json"})
+
+        self.assertEqual(put_response.status_code, 400)
+
+        self.assertIn(b"400 Bad Request", put_response.data)
 
     def tearDown(self):
         """ Teardown all initialized variables and database """
