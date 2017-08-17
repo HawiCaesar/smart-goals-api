@@ -25,7 +25,7 @@ class TestingConfig():
     SECRET_KEY = "This-is-a-T3sT-K3Y"
 
 
-class ProductionConfig():
+class ProductionConfig(Config):
     # Production configurations
     DEBUG = False
 
