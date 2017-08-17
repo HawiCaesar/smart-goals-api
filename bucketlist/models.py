@@ -1,9 +1,5 @@
-from bucketlist import database
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
-import os
-from flask import make_response, jsonify
-
+from bucketlist import database
 
 class User(database.Model):
     __tablename__ = 'users' # table name given during migration

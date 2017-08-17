@@ -1,4 +1,4 @@
-from flask import request, make_response, url_for, jsonify
+from flask import request, make_response, jsonify
 from bucketlist.models import User
 from flask.views import MethodView
 from bucketlist import create_access_token

@@ -1,7 +1,7 @@
-from flask import request, make_response, url_for, jsonify
-from bucketlist.models import Bucketlist, User, BucketlistItem, database, get_paginated_list
-from flask.views import MethodView
 import datetime
+from flask import request, make_response, jsonify
+from bucketlist.models import Bucketlist, BucketlistItem, database, get_paginated_list
+from flask.views import MethodView
 from bucketlist import get_jwt_identity, jwt_required
 
 
