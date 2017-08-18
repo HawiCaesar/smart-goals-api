@@ -7,7 +7,6 @@ class User(database.Model):
     id = database.Column(database.Integer, primary_key=True)
     email = database.Column(database.String(256), nullable=False, unique=True)
     password = database.Column(database.String(256), nullable=False)
-    admin = database.Column(database.Boolean)
     bucketlists = database.relationship('Bucketlist', order_by='Bucketlist.id', cascade="all, delete-orphan",
                                         backref='user', lazy='dynamic')
 
@@ -36,7 +35,8 @@ class Bucketlist(database.Model):
         onupdate=database.func.current_timestamp()
     )
     created_by = database.Column(database.Integer, database.ForeignKey(User.id))
-    items = database.relationship('BucketlistItem', backref='bucketlist', lazy='dynamic')
+    items = database.relationship('BucketlistItem', backref='bucketlist', cascade="all, delete-orphan",
+                                  lazy='dynamic')
 
     def __init__(self, name, created_by, date_created):
         self.name = name
