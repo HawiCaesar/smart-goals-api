@@ -1,7 +1,8 @@
-from flask import request, make_response, url_for, jsonify
+from flask import request, make_response, jsonify
 from bucketlist.models import User
 from flask.views import MethodView
 from bucketlist import create_access_token
+
 
 class UserRegistrationAPI(MethodView):
     """ Register users """
@@ -33,6 +34,7 @@ class UserRegistrationAPI(MethodView):
 
         return make_response(response)
 
+
 class LoginAPI(MethodView):
     def post(self):
 
@@ -54,8 +56,6 @@ class LoginAPI(MethodView):
 
                     response.status_code = 200
                     return make_response(response)
-                else:
-                    return make_response(jsonify({"message":"No identity"}))
 
             else:
                 response = jsonify({

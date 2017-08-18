@@ -1,8 +1,9 @@
-from flask import request, make_response, url_for, jsonify
-from bucketlist.models import Bucketlist, User, BucketlistItem, database, get_paginated_list
-from flask.views import MethodView
 import datetime
+from flask import request, make_response, jsonify
+from bucketlist.models import Bucketlist, BucketlistItem, database, get_paginated_list
+from flask.views import MethodView
 from bucketlist import get_jwt_identity, jwt_required
+
 
 class BucketlistAPI(MethodView):
     """ Create Read Update Delete Bucketlist """
@@ -67,39 +68,49 @@ class BucketlistAPI(MethodView):
                 response.status_code = 200
 
         else:
-            if start is None:
-                start = 1
-
-            if limit is None:
-                limit = 5
-
-            search = get_paginated_list('/v1/api/bucketlists/', 'bucketlist',
-                                        query, current_user, '', int(start), int(limit))
-
-            final_list = []
-
             try:
-                for bucketlist in search['results']:
-                    result = {
-                        'id': bucketlist.id,
-                        'name': bucketlist.name
-                    }
-                    final_list.append(result)
 
-                response = jsonify({"previous": search['previous'], "next": search['next'], "results": final_list})
-                response.status_code = 200
+                if start is None:
+                    start = 1
 
-            except:
+                if limit is None:
+                    limit = 5
+
+                search = get_paginated_list('/v1/api/bucketlists/', 'bucketlist',
+                                            query, current_user, '', int(start), int(limit))
+
+                final_list = []
+
+                try:
+                    for bucketlist in search['results']:
+                        result = {
+                            'id': bucketlist.id,
+                            'name': bucketlist.name
+                        }
+                        final_list.append(result)
+
+                    response = jsonify({"previous": search['previous'], "next": search['next'], "results": final_list})
+                    response.status_code = 200
+
+                except:
+                    response = jsonify({
+                        "status": "Fail",
+                        "message": "No Bucketlist matching your query was found"
+                    })
+                    response.status_code = 404
+
+            except ValueError:
+
                 response = jsonify({
                     "status": "Fail",
-                    "message": "No Bucketlist matching your query was found"
+                    "message": "Start Page and Limits should be numbers only"
                 })
-                response.status_code = 404
+                response.status_code = 500
 
         return make_response(response)
 
     @jwt_required
-    def put(self, id=None):
+    def put(self, id):
         current_user = get_jwt_identity()
 
         if id:
@@ -223,37 +234,47 @@ class BucketlistItemAPI(MethodView):
 
         elif kwargs.get('id') is not None:
 
-            if start is None:
-                start = 1
-
-            if limit is None:
-                limit = 5
-
-            search = get_paginated_list('/v1/api/bucketlists/'+str(kwargs['id'])+'/items/', 'bucketlist_item',
-                                        query, current_user, kwargs['id'], int(start), int(limit))
-
             try:
-                all_items = []
-                for buckelist_item in search['results']:
-                    item_response = {
-                        'item_name': buckelist_item.item_name,
-                        'date_created': buckelist_item.date_created,
-                        'date_modified': buckelist_item.date_modified,
-                        'done': buckelist_item.done,
-                        'complete_by': buckelist_item.complete_by,
-                        'bucketlist_id': buckelist_item.bucketlist_id
-                    }
-                    all_items.append(item_response)
 
-                response = jsonify({"previous": search['previous'], "next": search['next'], "results": all_items})
-                response.status_code = 200
+                if start is None:
+                    start = 1
 
-            except:
+                if limit is None:
+                    limit = 5
+
+                search = get_paginated_list('/v1/api/bucketlists/'+str(kwargs['id'])+'/items/', 'bucketlist_item',
+                                            query, current_user, kwargs['id'], int(start), int(limit))
+
+                try:
+                    all_items = []
+                    for buckelist_item in search['results']:
+                        item_response = {
+                            'item_name': buckelist_item.item_name,
+                            'date_created': buckelist_item.date_created,
+                            'date_modified': buckelist_item.date_modified,
+                            'done': buckelist_item.done,
+                            'complete_by': buckelist_item.complete_by,
+                            'bucketlist_id': buckelist_item.bucketlist_id
+                        }
+                        all_items.append(item_response)
+
+                    response = jsonify({"previous": search['previous'], "next": search['next'], "results": all_items})
+                    response.status_code = 200
+
+                except:
+                    response = jsonify({
+                        "status": "Fail",
+                        "message": "No bucketlist item matching your query in exists"
+                    })
+                    response.status_code = 404
+
+            except ValueError:
+
                 response = jsonify({
                     "status": "Fail",
-                    "message": "No bucketlist item matching your query in exists"
+                    "message": "Start Page and Limits should be numbers only"
                 })
-                response.status_code = 404
+                response.status_code = 500
 
         return make_response(response)
 

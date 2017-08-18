@@ -6,6 +6,7 @@ install:
 - pip install -r requirements.txt
 before_script:
 - psql -c 'create database test_db;' -U postgres
-script: coverage run -m unittest discover && coverage report
+script:
+- coverage run -m unittest discover && coverage report
 after_success:
 - coveralls

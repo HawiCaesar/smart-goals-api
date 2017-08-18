@@ -23,6 +23,8 @@ To run tests
 ```
 nosetests tests/
 ```
+## Documentation
+Follow this [link](http://docs.smartgoalsapi.apiary.io/#) to check out the documentation
 
 ## Authors
 
