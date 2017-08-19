@@ -1,4 +1,4 @@
-from bucketlist import create_application, database
+from app import create_application, database
 import unittest
 import json
 import sys

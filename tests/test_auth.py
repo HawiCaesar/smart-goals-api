@@ -1,6 +1,6 @@
 import unittest
 import json
-from bucketlist import create_application, database
+from app import create_application, database
 
 class AuthTestCases(unittest.TestCase):
     """Test case for the authentication blueprint."""
