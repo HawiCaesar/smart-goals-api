@@ -30,7 +30,7 @@ class UserRegistrationAPI(MethodView):
                 "message": "User already registered. Kindly Login"
             })
 
-            response.status_code = 202
+            response.status_code = 409
 
         return make_response(response)
 
