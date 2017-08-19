@@ -1,4 +1,4 @@
-from bucketlist import create_application, database
+from app import create_application, database
 import unittest
 import json
 import sys
@@ -52,236 +52,144 @@ class BucketlistTestCases(unittest.TestCase):
         result = login_user()
         self.access_token = json.loads(result.data.decode())
 
-
     def test_api_buckelist_item_creation(self):
         """ Test Case: Create Bucketlist Item """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
-
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                     "Content-Type": "application/json"})
 
         self.assertEqual(response_item.status_code, 201)
-
-        data_item = json.loads(response_item.data.decode())
-
-        self.assertIn("Bucketlist Item Created", data_item['message'], "Bucketlist Item not created")
+        self.assertIn("Bucketlist Item Created", json.loads(response_item.data)['message'])
 
     def test_api_user_cannot_create_existing_bucketlist_item(self):
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                     "Content-Type": "application/json"})
 
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item2 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item2.status_code, 409)
-
-        data_item = json.loads(response_item2.data.decode())
-
-        self.assertIn("Bucketlist Item Already Exists", data_item['message'],
+        self.assertEqual(response_item.status_code, 409)
+        self.assertIn("Bucketlist Item Already Exists", json.loads(response_item.data)['message'],
                       "Existing bucketlist item should not be created")
 
     def test_api_get_bucketlist_item(self):
         """ Get all Bucketlist items that has been saved to database """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         get_response_item = self.client().get('/v1/api/bucketlists/1/items/',
                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                        "Content-Type": "application/json"})
 
-        self.assertEqual(get_response_item.status_code, 200)
-        data_item = json.loads(get_response_item.data.decode())
+        data_item = json.loads(get_response_item.data)
 
-        self.assertIn("Travel to NYC, USA", data_item['results'][0]['item_name'], "Cannot fetch bucketlist Item")
+        self.assertEqual(get_response_item.status_code, 200)
+        self.assertIn("Travel to NYC, USA", data_item['results'][0]['item_name'])
 
     def test_api_get_bucketlist_item_by_id(self):
         """ Get bucketlist item by id from database """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        # One Bucketlist item
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
-
-        # Second Bucketlist item
-        response_item2 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item2.status_code, 201)
-
-        get_response_item = self.client().get('/v1/api/bucketlists/1/items/2',
+        get_response_item = self.client().get('/v1/api/bucketlists/1/items/1',
                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                        "Content-Type": "application/json"})
 
-        self.assertEqual(get_response_item.status_code, 200)
-        data_item = json.loads(get_response_item.data.decode())
+        data_item = json.loads(get_response_item.data)
 
+        self.assertEqual(get_response_item.status_code, 200)
         self.assertIn("Travel to NYC, USA", data_item['item_name'], "Cannot fetch bucketlist Item")
 
     def test_api_no_buckelist_item_response_message(self):
         """ Test if the response message is returned when no bucketlist item is created """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
-
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         get_response_item = self.client().get('/v1/api/bucketlists/1/items/',
                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                        "Content-Type": "application/json"})
 
-        self.assertEqual(get_response_item.status_code, 404)
-        data_item = json.loads(get_response_item.data.decode())
+        data_item = json.loads(get_response_item.data)
 
+        self.assertEqual(get_response_item.status_code, 404)
         self.assertIn("No bucketlist item matching your query in exists", data_item['message'],
                       "Bucketlist has no items")
 
     def test_api_test_response_message(self):
         """ Test response message is returned if no parameter passed in GET request for bucketlist items """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
-
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         get_response_item = self.client().get('/v1/api/bucketlists//items/',
                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                        "Content-Type": "application/json"})
 
         self.assertEqual(get_response_item.status_code, 404)
-
         self.assertIn(b"The requested URL was not found on the server", get_response_item.data,
                       "Bucketlist has no items")
 
     def test_api_user_can_update_bucketlist_item(self):
         """ Test Case User can update a bucket list item PUT request"""
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         update_item = self.client().put('/v1/api/bucketlists/1/items/1', data=json.dumps(self.bucketlist_item_update),
                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                  "Content-Type": "application/json"})
 
-        self.assertEqual(update_item.status_code, 200)
-
         get_response_item = self.client().get('/v1/api/bucketlists/1/items/1',
                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                        "Content-Type": "application/json"})
 
-        self.assertEqual(get_response_item.status_code, 200)
-        data_item = json.loads(get_response_item.data.decode())
+        data_item = json.loads(get_response_item.data)
 
+        self.assertEqual(update_item.status_code, 200)
         self.assertIn("Draw Ed, Edd, Eddy", data_item['item_name'], "Bucketlist item cannot be updated")
 
     def test_api_user_cannot_update_bucketlist_item_without_id(self):
         """ Test Case User cannot update a bucket list item without id PUT request"""
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         update_item = self.client().put('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item_update),
                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
@@ -293,93 +201,59 @@ class BucketlistTestCases(unittest.TestCase):
     def test_api_user_cannot_update_non_existing_bucketlist_item(self):
         """ Test Case User cannot update a non-existing bucketlist item"""
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         update_item = self.client().put('/v1/api/bucketlists/1/items/5', data=json.dumps(self.bucketlist_item_update),
                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                  "Content-Type": "application/json"})
 
+        data_item = json.loads(update_item.data)
+
         self.assertEqual(update_item.status_code, 404)
-
-        data_item = json.loads(update_item.data.decode())
-
         self.assertIn("Bucketlist item does not exist", data_item['message'],
                       "Bucketlist item cannot be updated because it is non-existed")
 
     def test_api_user_cannot_update_bucketlist_item_of_different_bucketlist(self):
         """ Test Case User should not be allowed to update bucketlist item of a non-existing or different bucketlist """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         update_item = self.client().put('/v1/api/bucketlists/4/items/2', data=json.dumps(self.bucketlist_item_update),
                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                  "Content-Type": "application/json"})
 
-        self.assertEqual(update_item.status_code, 404)
-
         data_item = json.loads(update_item.data.decode())
 
+        self.assertEqual(update_item.status_code, 404)
         self.assertIn("Bucketlist item does not exist", data_item['message'],
                       "Cannot update bucketlist item that does not belong to bucketlist")
 
     def test_user_can_delete_bucketlist_item(self):
         """Test Case User can delete bucketlist item """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         delete_response = self.client().delete('/v1/api/bucketlists/1/items/1',
                                                headers={"Authorization": "Bearer " + self.access_token['access_token'],
@@ -390,23 +264,13 @@ class BucketlistTestCases(unittest.TestCase):
     def test_user_cannot_delete_bucketlist_item_without_id(self):
         """Test Case User can delete bucketlist item """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         delete_response = self.client().delete('/v1/api/bucketlists/1/items/',
                                                headers={"Authorization": "Bearer " + self.access_token['access_token'],
@@ -418,402 +282,280 @@ class BucketlistTestCases(unittest.TestCase):
     def test_user_cannot_delete_non_existing_bucketlist(self):
         """ Test Case User cannot delete non-existing bucketlist """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         delete_response = self.client().delete('/v1/api/bucketlists/1/items/4',
                                                headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                         "Content-Type": "application/json"})
 
         self.assertEqual(delete_response.status_code, 404)
+        self.assertIn(json.loads(delete_response.data)['message'],
+                      "Bucketlist item cannot be deleted as it does not exist")
 
     def test_user_cannot_delete_bucketlist_item_of_different_bucketlist(self):
         """ Test Case User should not be allowed to delete bucketlist item of a non-existing or different bucketlist """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         delete_response = self.client().delete('/v1/api/bucketlists/4/items/2',
                                                headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                         "Content-Type": "application/json"})
 
+        data_item = json.loads(delete_response.data)
+
         self.assertEqual(delete_response.status_code, 404)
-
-        data_item = json.loads(delete_response.data.decode())
-
         self.assertIn("Bucketlist item cannot be deleted as it does not exist", data_item['message'],
                       "Cannot delete bucketlist item that does not belong to bucketlist")
 
-    def test_api_search_term_for_bucketlist_items_in_bucketlist_works(self):
+    def test_api_search_bucketlist_items_in_bucketlist_works(self):
         """ Test Case: User can pass query to search for bucketlist items """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         get_response = self.client().get('/v1/api/bucketlists/1/items/?q=Dr',
                                          headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                   "Content-Type": "application/json"})
 
-        data = json.loads(get_response.data.decode('utf-8'))
+        data = json.loads(get_response.data)
 
         self.assertEqual(get_response.status_code, 200)
-
         self.assertEqual(len(data['results']), 2, "2 results should be returned for search term 'Dr' ")
 
-    def test_api_returns_correct_message_if_bucketlist_item_non_existent(self):
+    def test_api_returns_correct_message_bucketlist_item_non_existent(self):
         """Test Case: User should be given correct error message when fetching non-existing bucketlist item """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         get_response = self.client().get('/v1/api/bucketlists/5/items/6',
                                          headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                   "Content-Type": "application/json"})
 
-        data = json.loads(get_response.data.decode('utf-8'))
+        data = json.loads(get_response.data)
 
         self.assertEqual(get_response.status_code, 404)
-
         self.assertEqual(data['message'], "That bucketlist item does not exist in bucketlist",
                          "No results non existing bucketlist item")
 
-    def test_api_return_correct_message_if_no_parameters_passed_to_search_bucketlist_item(self):
+    def test_api_return_correct_message_if_no_parameters_passed(self):
         """ Test Case: User should be given correct error message when not passing parameters to get bucketlist item """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        self.assertEqual(get_response.status_code, 200)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         get_response = self.client().get('/v1/api/bucketlists/{}/items/{}',
                                          headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                   "Content-Type": "application/json"})
 
         self.assertEqual(get_response.status_code, 404)
-
         self.assertIn(b'404 Not Found', get_response.data, "No results non existing bucketlist item")
 
-    def test_api_show_previous_and_next_link_for_many_bucketlist_items(self):
+    def test_api_show_previous_and_next_link(self):
         """ Previous and Next links are shown """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(get_response.status_code, 200)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item5),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item5),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item6),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item6),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         get_response = self.client().get('/v1/api/bucketlists/1/items/?start=2&limit=2',
                                          headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                   "Content-Type": "application/json"})
 
-        data = json.loads(get_response.data.decode('utf-8'))
+        data = json.loads(get_response.data)
 
         self.assertEqual(get_response.status_code, 200)
-
-        self.assertEqual(data['previous'], "/v1/api/bucketlists/1/items/?start=1&limit=2", "Test has no previous link")
+        self.assertIn(data['previous'], "/v1/api/bucketlists/1/items/?start=1&limit=2")
+        self.assertIn(data['next'], "/v1/api/bucketlists/1/items/?start=3&limit=2")
 
     def test_api_basic_pagination_for_bucketlist_items(self):
         """ Using a simple GET request on bucketlist items returns a paginated list of 5 items """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        get_response = self.client().get('/v1/api/bucketlists/1',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(get_response.status_code, 200)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item6),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item7),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response_item.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item8),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item9),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response_item.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item10),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item6),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item7),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item8),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item9),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item10),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
-
-        response_item = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item11),
-                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                    "Content-Type": "application/json"})
-
-        self.assertEqual(response_item.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item11),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         get_response = self.client().get('/v1/api/bucketlists/1/items/',
                                          headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                   "Content-Type": "application/json"})
 
-        data = json.loads(get_response.data.decode('utf-8'))
+        data = json.loads(get_response.data)
 
         self.assertEqual(get_response.status_code, 200)
-
         self.assertEqual(len(data['results']), 5, "5 results should be returned for simple GET")
 
     def test_api_cannot_get_bucketlist_item_without_token(self):
         """ Test Case: User cannot GET bucketlist items without auth token """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Content-Type": "application/json"})
 
         get_response = self.client().get('/v1/api/bucketlists/1/items/', headers={"Content-Type": "application/json"})
 
-        self.assertEqual(get_response.status_code, 401)
-
-        data = json.loads(get_response.data.decode('utf-8'))
-        self.assertEqual("Missing Authorization Header", data['msg'])
-
-        get_response = self.client().get('/v1/api/bucketlists/1/items/1', headers={"Content-Type": "application/json"})
+        data = json.loads(get_response.data)
 
         self.assertEqual(get_response.status_code, 401)
-
-        data = json.loads(get_response.data.decode('utf-8'))
         self.assertEqual("Missing Authorization Header", data['msg'])
 
     def test_api_cannot_post_bucketlist_item_without_token(self):
         """ Test Case: User cannot POST bucketlist items without auth token """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
-
-        self.assertEqual(response.status_code, 201)
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
                                             headers={"Content-Type": "application/json"})
 
+        data = json.loads(response_item1.data)
+
         self.assertEqual(response_item1.status_code, 401)
-        data = json.loads(response_item1.data.decode('utf-8'))
         self.assertEqual("Missing Authorization Header", data['msg'])
 
     def test_api_cannot_put_bucketlist_item_without_token(self):
         """ Test Case: User cannot PUT bucketlist items without auth token """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         update_item = self.client().put('/v1/api/bucketlists/1/items/1', data=json.dumps(self.bucketlist_item_update),
                                         headers={"Content-Type": "application/json"})
 
-        data = json.loads(update_item.data.decode('utf-8'))
+        data = json.loads(update_item.data)
+        self.assertEqual(update_item.status_code, 401)
         self.assertEqual("Missing Authorization Header", data['msg'])
 
     def test_api_cannot_delete_bucketlist_item_without_token(self):
         """ Test Case: User cannot DELETE bucketlist items without auth token """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         delete_item = self.client().delete('/v1/api/bucketlists/1/items/1',
                                            headers={"Content-Type": "application/json"})
 
-        self.assertEqual(delete_item.status_code, 401)
+        data = json.loads(delete_item.data)
 
-        data = json.loads(delete_item.data.decode('utf-8'))
+        self.assertEqual(delete_item.status_code, 401)
         self.assertEqual("Missing Authorization Header", data['msg'])
 
     def test_api_cannot_allow_post_request_without_data(self):
         """ User cannot add a bucketlist item without data """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
+        response_item = self.client().post('/v1/api/bucketlists/1/items/',
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
 
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/',
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 400)
-        self.assertIn(b"400 Bad Request", response_item1.data)
+        self.assertEqual(response_item.status_code, 400)
+        self.assertIn(b"400 Bad Request", response_item.data)
 
     def test_api_cannot_allow_put_request_without_data(self):
         """ User cannot update a bucketlist item without data """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
-
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
         response_item1 = self.client().put('/v1/api/bucketlists/1/items/1',
                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                     "Content-Type": "application/json"})
@@ -821,66 +563,46 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertEqual(response_item1.status_code, 400)
         self.assertIn(b"400 Bad Request", response_item1.data)
 
-    def test_api_returns_error_message_when_start_and_limit_parameters_are_non_numbers(self):
+    def test_api_error_start_and_limit_parameters_are_non_numbers(self):
         """ Server returns an error message when start page and limit is not a number """
 
-        response = self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
-                                      headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                               "Content-Type": "application/json"})
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        self.assertEqual(response.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
-
-        response_item1 = self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
-                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                     "Content-Type": "application/json"})
-
-        self.assertEqual(response_item1.status_code, 201)
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
 
         # Start parameter
-        get_response = self.client().get('/v1/api/bucketlists/1/items/?start=r',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        data = json.loads(get_response.data.decode('utf-8'))
-
-        self.assertEqual(get_response.status_code, 500)
-
-        self.assertEqual(data['message'], "Start Page and Limits should be numbers only",
-                         "Server should reject character in start and limit parameters")
-
+        start_response = self.client().get('/v1/api/bucketlists/1/items/?start=r',
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
         # Limit parameter
-        get_response = self.client().get('/v1/api/bucketlists/1/items/?limit=e',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
-
-        data = json.loads(get_response.data.decode('utf-8'))
-
-        self.assertEqual(get_response.status_code, 500)
-
-        self.assertEqual(data['message'], "Start Page and Limits should be numbers only",
-                         "Server should reject character in start and limit parameters")
-
+        limit_response = self.client().get('/v1/api/bucketlists/1/items/?limit=e',
+                                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                    "Content-Type": "application/json"})
         # Both parameters
-        get_response = self.client().get('/v1/api/bucketlists/1/items/?start=r&limit=e',
-                                         headers={"Authorization": "Bearer " + self.access_token['access_token'],
-                                                  "Content-Type": "application/json"})
+        both_response = self.client().get('/v1/api/bucketlists/1/items/?start=r&limit=e',
+                                          headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                   "Content-Type": "application/json"})
 
-        data = json.loads(get_response.data.decode('utf-8'))
+        data_start_param = json.loads(start_response.data)
+        data_limit_param = json.loads(limit_response.data)
+        data_both_param = json.loads(both_response.data)
 
-        self.assertEqual(get_response.status_code, 500)
+        self.assertEqual(start_response.status_code, 500)
+        self.assertEqual(data_start_param['message'], "Start Page and Limits should be numbers only")
 
-        self.assertEqual(data['message'], "Start Page and Limits should be numbers only",
-                         "Server should reject character in start and limit parameters")
+        self.assertEqual(limit_response.status_code, 500)
+        self.assertEqual(data_limit_param['message'], "Start Page and Limits should be numbers only")
 
-
-
-
+        self.assertEqual(both_response.status_code, 500)
+        self.assertEqual(data_both_param['message'], "Start Page and Limits should be numbers only")
 
     def tearDown(self):
         """ Teardown all initialized variables and database """
