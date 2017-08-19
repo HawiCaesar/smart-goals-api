@@ -15,7 +15,7 @@ class AuthTestCases(unittest.TestCase):
             'email': 'test@example.com',
             'password': 'test_password'
         }
-        
+
         # Unregistered User
         self.non_user = {
             'email': 'non_user@example.com',
