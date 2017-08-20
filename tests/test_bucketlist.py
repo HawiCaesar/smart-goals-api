@@ -339,7 +339,7 @@ class BucketlistTestCases(unittest.TestCase):
         data = json.loads(get_response.data)
 
         self.assertEqual(get_response.status_code, 200)
-        self.assertIn(data['next'], '/v1/api/bucketlists/?start=2&limit=3', "Next page link not provided")
+        self.assertIn(data['next'], '/v1/api/bucketlists/?start=4&limit=3', "Next page link not provided")
         self.assertIn(data['previous'], '', 'Previous link should be empty for start of 1')
 
     def test_api_search_bucketlist_works(self):
@@ -392,7 +392,7 @@ class BucketlistTestCases(unittest.TestCase):
         data = json.loads(get_response.data)
 
         self.assertEqual(get_response.status_code, 404)
-        self.assertIn('No Bucketlist matching your query was found', data['message'], "Wrong message returned")
+        self.assertIn('Bucketlist Does Not Exist', data['message'], "Wrong message returned")
 
     def test_api_user_cannot_create_existing_bucketlist(self):
         """ Test Case: The API should refuse the user from recreating an existing bucketlist """
