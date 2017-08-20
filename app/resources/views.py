@@ -77,17 +77,17 @@ class BucketlistAPI(MethodView):
                 if limit is None:
                     limit = 5
 
-                results = []
+                bucketlist_results = []
 
                 if query is None:
-                    results = Bucketlist.get_all_bucketlists(current_user)
+                    bucketlist_results = Bucketlist.get_all_bucketlists(current_user)
 
                 else:
                     searchterm = '%' + query + '%'
-                    results = Bucketlist.query.filter(Bucketlist.name.like(searchterm))\
+                    bucketlist_results = Bucketlist.query.filter(Bucketlist.name.like(searchterm))\
                         .filter_by(created_by=current_user).all()
 
-                if not results:
+                if not bucketlist_results:
 
                     response = jsonify({
                         "status": "Fail",
@@ -99,7 +99,7 @@ class BucketlistAPI(MethodView):
 
                 prepared = PaginationHelper('/v1/api/bucketlists/', int(start), int(limit))
 
-                list_results = prepared.paginate_results(results)
+                list_results = prepared.paginate_results(bucketlist_results)
 
                 final_list = []
 
@@ -271,13 +271,13 @@ class BucketlistItemAPI(MethodView):
                 return make_response(response)
 
             items_returned = []
-            results = []
+            item_results = []
 
             if query is None:
 
-                query_results = Bucketlist.query.filter_by(id=kwargs['id'], created_by=current_user).all()
+                get_results = Bucketlist.query.filter_by(id=kwargs['id'], created_by=current_user).all()
 
-                if not query_results:
+                if not get_results:
                     response = jsonify({
                         "status": "Fail",
                         "message": "Bucketlist Does Not Exist",
@@ -286,34 +286,34 @@ class BucketlistItemAPI(MethodView):
 
                     return make_response(response)
 
-                for query_result in query_results:
+                for bucketlist in get_results:
 
-                    if not query_result.items.all():
+                    if not bucketlist.items.all():
                         response = jsonify({
                             "status": "Success",
                             "message": "No Bucketlist Items in this Bucketlist",
-                            "results": query_result.items.all()
+                            "results": bucketlist.items.all()
                         })
                         response.status_code = 404
 
                         return make_response(response)
 
-                    items_returned.append(query_result.items.all())
+                    items_returned.append(bucketlist.items.all())
 
                 for r in items_returned:
                     for final in r:
-                        results.append(final)
+                        item_results.append(final)
 
             else:
                 query = '%' + query + '%'
 
-                results = BucketlistItem.query.\
+                item_results = BucketlistItem.query.\
                     filter_by(bucketlist_id=kwargs['id']).\
                     filter(BucketlistItem.item_name.like(query)).\
                     join(Bucketlist, BucketlistItem.bucketlist_id == Bucketlist.id).\
                     filter_by(created_by=current_user).all()
 
-                if not results:
+                if not item_results:
                     response = jsonify({
                         "status": "Fail",
                         "message": "Bucketlist Item does not exist"
@@ -325,7 +325,7 @@ class BucketlistItemAPI(MethodView):
             prepared = PaginationHelper('/v1/api/bucketlists/'+str(kwargs['id'])+'/items/',
                                         start, limit)
 
-            list_results = prepared.paginate_results(results)
+            list_results = prepared.paginate_results(item_results)
 
             all_items = []
             for buckelist_item in list_results['results']:
