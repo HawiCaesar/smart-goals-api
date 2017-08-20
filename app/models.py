@@ -54,6 +54,9 @@ class Bucketlist(database.Model):
     def __repr__(self):
         return "{} - {}".format(self.id, self.name)
 
+    def get_all_bucketlists(user):
+        return Bucketlist.query.filter_by(created_by=user).all()
+
 
 class BucketlistItem(database.Model):
 
@@ -67,7 +70,6 @@ class BucketlistItem(database.Model):
     done = database.Column(database.Boolean, default=False)
     complete_by = database.Column(database.DateTime)
     bucketlist_id = database.Column(database.Integer, database.ForeignKey(Bucketlist.id))
-
 
     def save(self):
         database.session.add(self)
@@ -87,55 +89,5 @@ class BucketlistItem(database.Model):
         return "<BucketlistItem: {}>".format(self.item_name)
 
 
-def get_paginated_list(url, model, searchterm, user, bucketlist_id, start, limit):
-
-        if model == 'bucketlist':
-
-            if searchterm is None:
-                results = Bucketlist.query.filter_by(created_by=user).all()
-            else:
-                searchterm = '%'+searchterm+'%'
-                results = Bucketlist.query.filter(Bucketlist.name.like(searchterm)).filter_by(created_by=user).all()
-
-        else:
-            if searchterm is None:
-                results = BucketlistItem.query.\
-                    filter_by(bucketlist_id=bucketlist_id).\
-                    join(Bucketlist, BucketlistItem.bucketlist_id == Bucketlist.id).\
-                    filter_by(created_by=user).all()
-
-            else:
-                searchterm = '%'+searchterm+'%'
-                results = BucketlistItem.query.\
-                    filter_by(bucketlist_id=bucketlist_id).\
-                    filter(BucketlistItem.item_name.like(searchterm)).\
-                    join(Bucketlist, BucketlistItem.bucketlist_id == Bucketlist.id).\
-                    filter_by(created_by=user).all()
-
-        # check if page exists
-        count = len(results)
-        if count < start:
-            return {"status": "Fail", "message": "Page Not Found"}
-
-        # make response
-        obj = {}
-        obj['start'] = start
-        obj['limit'] = limit
-        obj['count'] = count
-        # make URLs
-        # make previous url
-        if start == 1:
-            obj['previous'] = ''
-        else:
-            obj['previous'] = url + '?start=%d&limit=%d' % (start - 1, limit)
-        # make next url
-        if start + limit > count:
-            obj['next'] = ''
-        else:
-            start_copy = start + 1
-            obj['next'] = url + '?start=%d&limit=%d' % (start_copy, limit)
-        # finally extract result according to bounds
-        obj['results'] = results[(start - 1):(start - 1 + limit)]
-        return obj
 
 
