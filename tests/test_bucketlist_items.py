@@ -138,8 +138,8 @@ class BucketlistTestCases(unittest.TestCase):
         data_item = json.loads(get_response_item.data)
 
         self.assertEqual(get_response_item.status_code, 404)
-        self.assertIn("No bucketlist item matching your query in exists", data_item['message'],
-                      "Bucketlist has no items")
+        self.assertEqual(len(data_item['results']), 0)
+        self.assertIn("No Bucketlist Items in this Bucketlist", data_item['message'])
 
     def test_api_test_response_message(self):
         """ Test response message is returned if no parameter passed in GET request for bucketlist items """
@@ -385,27 +385,39 @@ class BucketlistTestCases(unittest.TestCase):
     def test_api_show_previous_and_next_link(self):
         """ Previous and Next links are shown """
 
-        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist1),
                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                     "Content-Type": "application/json"})
 
-        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                     "Content-Type": "application/json"})
 
-        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                     "Content-Type": "application/json"})
 
-        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item5),
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item7),
                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                     "Content-Type": "application/json"})
 
-        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item6),
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item8),
                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                     "Content-Type": "application/json"})
 
-        get_response = self.client().get('/v1/api/bucketlists/1/items/?start=2&limit=2',
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item9),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item10),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item11),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        get_response = self.client().get('/v1/api/bucketlists/1/items/?start=3&limit=3',
                                          headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                   "Content-Type": "application/json"})
 
@@ -413,7 +425,7 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual(get_response.status_code, 200)
         self.assertIn(data['previous'], "/v1/api/bucketlists/1/items/?start=1&limit=2")
-        self.assertIn(data['next'], "/v1/api/bucketlists/1/items/?start=3&limit=2")
+        self.assertIn(data['next'], "/v1/api/bucketlists/1/items/?start=6&limit=3")
 
     def test_api_basic_pagination_for_bucketlist_items(self):
         """ Using a simple GET request on bucketlist items returns a paginated list of 5 items """
@@ -603,6 +615,45 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertEqual(both_response.status_code, 500)
         self.assertEqual(data_both_param['message'], "Start Page and Limits should be numbers only")
+
+    def test_api_correct_message_for_no_items(self):
+        """ Trying to get items of non-existent bucketlist """
+
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        get_response_item = self.client().get('/v1/api/bucketlists/5/items/',
+                                              headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                       "Content-Type": "application/json"})
+
+        data = json.loads(get_response_item.data)
+        self.assertEqual(get_response_item.status_code, 404)
+        self.assertIn("Bucketlist Does Not Exist", data['message'])
+
+    def test_api_search_none_existent_bucketlist_item(self):
+        """ Correct message is returned when search returns no result """
+
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item1),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        get_response_item = self.client().get('/v1/api/bucketlists/1/items/?q=observe',
+                                              headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                       "Content-Type": "application/json"})
+
+        data = json.loads(get_response_item.data)
+
+        self.assertEqual(get_response_item.status_code, 404)
+        self.assertIn("Bucketlist Item does not exist", data['message'])
 
     def tearDown(self):
         """ Teardown all initialized variables and database """
