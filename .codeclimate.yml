@@ -5,3 +5,5 @@ engines:
       languages:
         python:
           mass_threshold: 39
+exclude_paths:
+- "tests/"
