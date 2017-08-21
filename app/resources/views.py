@@ -1,8 +1,9 @@
 import datetime
 from flask import request, make_response, jsonify
-from bucketlist.models import Bucketlist, BucketlistItem, database, get_paginated_list
 from flask.views import MethodView
-from bucketlist import get_jwt_identity, jwt_required
+from app import get_jwt_identity, jwt_required
+from app.models import Bucketlist, BucketlistItem, database
+from app.helpers import PaginationHelper
 
 
 class BucketlistAPI(MethodView):
@@ -76,28 +77,42 @@ class BucketlistAPI(MethodView):
                 if limit is None:
                     limit = 5
 
-                search = get_paginated_list('/v1/api/bucketlists/', 'bucketlist',
-                                            query, current_user, '', int(start), int(limit))
+                bucketlist_results = []
+
+                if query is None:
+                    bucketlist_results = Bucketlist.get_all_bucketlists(current_user)
+
+                else:
+                    searchterm = '%' + query + '%'
+                    bucketlist_results = Bucketlist.query.filter(Bucketlist.name.like(searchterm))\
+                        .filter_by(created_by=current_user).all()
+
+                if not bucketlist_results:
+
+                    response = jsonify({
+                        "status": "Fail",
+                        "message": "Bucketlist Does Not Exist"
+                    })
+                    response.status_code = 404
+
+                    return make_response(response)
+
+                prepared = PaginationHelper('/v1/api/bucketlists/', int(start), int(limit))
+
+                list_results = prepared.paginate_results(bucketlist_results)
 
                 final_list = []
 
-                try:
-                    for bucketlist in search['results']:
-                        result = {
-                            'id': bucketlist.id,
-                            'name': bucketlist.name
-                        }
-                        final_list.append(result)
+                for bucketlist in list_results['results']:
+                    result = {
+                        'id': bucketlist.id,
+                        'name': bucketlist.name
+                    }
+                    final_list.append(result)
 
-                    response = jsonify({"previous": search['previous'], "next": search['next'], "results": final_list})
-                    response.status_code = 200
-
-                except:
-                    response = jsonify({
-                        "status": "Fail",
-                        "message": "No Bucketlist matching your query was found"
-                    })
-                    response.status_code = 404
+                response = jsonify({"previous": list_results['previous'], "next": list_results['next'],
+                                    "results": final_list})
+                response.status_code = 200
 
             except ValueError:
 
@@ -242,31 +257,8 @@ class BucketlistItemAPI(MethodView):
                 if limit is None:
                     limit = 5
 
-                search = get_paginated_list('/v1/api/bucketlists/'+str(kwargs['id'])+'/items/', 'bucketlist_item',
-                                            query, current_user, kwargs['id'], int(start), int(limit))
-
-                try:
-                    all_items = []
-                    for buckelist_item in search['results']:
-                        item_response = {
-                            'item_name': buckelist_item.item_name,
-                            'date_created': buckelist_item.date_created,
-                            'date_modified': buckelist_item.date_modified,
-                            'done': buckelist_item.done,
-                            'complete_by': buckelist_item.complete_by,
-                            'bucketlist_id': buckelist_item.bucketlist_id
-                        }
-                        all_items.append(item_response)
-
-                    response = jsonify({"previous": search['previous'], "next": search['next'], "results": all_items})
-                    response.status_code = 200
-
-                except:
-                    response = jsonify({
-                        "status": "Fail",
-                        "message": "No bucketlist item matching your query in exists"
-                    })
-                    response.status_code = 404
+                start = int(start)
+                limit = int(limit)
 
             except ValueError:
 
@@ -275,6 +267,81 @@ class BucketlistItemAPI(MethodView):
                     "message": "Start Page and Limits should be numbers only"
                 })
                 response.status_code = 500
+
+                return make_response(response)
+
+            items_returned = []
+            item_results = []
+
+            if query is None:
+
+                get_results = Bucketlist.query.filter_by(id=kwargs['id'], created_by=current_user).all()
+
+                if not get_results:
+                    response = jsonify({
+                        "status": "Fail",
+                        "message": "No Bucketlist Items Because Bucketlist Does Not Exist",
+                    })
+                    response.status_code = 404
+
+                    return make_response(response)
+
+                for bucketlist in get_results:
+
+                    if not bucketlist.items.all():
+                        response = jsonify({
+                            "status": "Success",
+                            "message": "No Bucketlist Items in this Bucketlist",
+                            "results": bucketlist.items.all()
+                        })
+                        response.status_code = 404
+
+                        return make_response(response)
+
+                    items_returned.append(bucketlist.items.all())
+
+                for r in items_returned:
+                    for final in r:
+                        item_results.append(final)
+
+            else:
+                query = '%' + query + '%'
+
+                item_results = BucketlistItem.query.\
+                    filter_by(bucketlist_id=kwargs['id']).\
+                    filter(BucketlistItem.item_name.like(query)).\
+                    join(Bucketlist, BucketlistItem.bucketlist_id == Bucketlist.id).\
+                    filter_by(created_by=current_user).all()
+
+                if not item_results:
+                    response = jsonify({
+                        "status": "Fail",
+                        "message": "Bucketlist Item does not exist"
+                    })
+                    response.status_code = 404
+
+                    return make_response(response)
+
+            prepared = PaginationHelper('/v1/api/bucketlists/'+str(kwargs['id'])+'/items/',
+                                        start, limit)
+
+            list_results = prepared.paginate_results(item_results)
+
+            all_items = []
+            for buckelist_item in list_results['results']:
+                item_response = {
+                    'item_name': buckelist_item.item_name,
+                    'date_created': buckelist_item.date_created,
+                    'date_modified': buckelist_item.date_modified,
+                    'done': buckelist_item.done,
+                    'complete_by': buckelist_item.complete_by,
+                    'bucketlist_id': buckelist_item.bucketlist_id
+                }
+                all_items.append(item_response)
+
+            response = jsonify({"previous": list_results['previous'], "next": list_results['next'],
+                                "results": all_items})
+            response.status_code = 200
 
         return make_response(response)
 

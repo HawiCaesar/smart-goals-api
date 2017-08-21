@@ -1,6 +1,6 @@
 import unittest
 import json
-from bucketlist import create_application, database
+from app import create_application, database
 
 class AuthTestCases(unittest.TestCase):
     """Test case for the authentication blueprint."""
@@ -14,6 +14,12 @@ class AuthTestCases(unittest.TestCase):
         self.user_data = {
             'email': 'test@example.com',
             'password': 'test_password'
+        }
+
+        # Unregistered User
+        self.non_user = {
+            'email': 'non_user@example.com',
+            'password': 'nope'
         }
         self.headers = {'Content-Type': 'application/json'}
 
@@ -31,53 +37,47 @@ class AuthTestCases(unittest.TestCase):
 
         result = json.loads(response.data.decode())
 
-        self.assertEqual(result['message'], "User registered successfully.")
+        self.assertIn(result['message'], "User registered successfully.")
         self.assertEqual(response.status_code, 201)
 
     def test_registered_user_cannot_register_twice(self):
         """ A user cannot enter be allowed to register twice """
 
         response = self.client().post('/v1/api/auth/register', data=json.dumps(self.user_data), headers=self.headers)
+        response2 = self.client().post('/v1/api/auth/register', data=json.dumps(self.user_data), headers=self.headers)
+
         self.assertEqual(response.status_code, 201)
 
-        response2 = self.client().post('/v1/api/auth/register', data=json.dumps(self.user_data), headers=self.headers)
-        self.assertEqual(response2.status_code, 202)
+        self.assertEqual(response2.status_code, 409)
 
         result = json.loads(response2.data.decode())
-        self.assertEqual(result['message'], "User already registered. Kindly Login")
+        self.assertIn(result['message'], "User already registered. Kindly Login")
 
     def test_user_login(self):
         """ Allow the user to login """
 
         response = self.client().post('/v1/api/auth/register', data=json.dumps(self.user_data), headers=self.headers)
-        self.assertEqual(response.status_code, 201)
 
         login_response = self.client().post('/v1/api/auth/login', data=json.dumps(self.user_data),
                                             headers=self.headers)
 
         result = json.loads(login_response.data.decode())
 
-        self.assertEqual(result['message'], "User has logged in!")
+        self.assertEqual(response.status_code, 201)
+        self.assertIn(result['message'], "User has logged in!")
         self.assertEqual(login_response.status_code, 200)
-        self.assertTrue(result['access_token'])
+        self.assertTrue('access_token' in result)
 
     def test_non_registered_user_login(self):
         """Test non registered users cannot login."""
-        # Unregistered User
 
-        non_user = {
-            'email': 'non_user@example.com',
-            'password': 'nope'
-        }
-        # send a POST request to /v1/api/auth/login with the data above
-        response = self.client().post('/v1/api/auth/login', data=json.dumps(non_user), headers=self.headers)
+        response = self.client().post('/v1/api/auth/login', data=json.dumps(self.non_user), headers=self.headers)
 
         result = json.loads(response.data.decode())
 
         # 401(Unauthorized User)
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(
-            result['message'], "Invalid email or password, Please try again")
+        self.assertIn(result['message'], "Invalid email or password, Please try again")
 
     def tearDown(self):
         """ Teardown all initialized variables """

@@ -1,7 +1,7 @@
 from flask import request, make_response, jsonify
-from bucketlist.models import User
+from app.models import User
 from flask.views import MethodView
-from bucketlist import create_access_token
+from app import create_access_token
 
 
 class UserRegistrationAPI(MethodView):
@@ -30,7 +30,7 @@ class UserRegistrationAPI(MethodView):
                 "message": "User already registered. Kindly Login"
             })
 
-            response.status_code = 202
+            response.status_code = 409
 
         return make_response(response)
 

@@ -20,13 +20,13 @@ def create_application(config_name):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Register endpoints
-    from .core_app import core_app as bucketlist_blueprint
+    from .resources import resources as bucketlist_blueprint
     app.register_blueprint(bucketlist_blueprint)
 
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint)
 
-    from bucketlist.models import User
+    from app.models import User
     global jwt
     jwt = JWTManager(app)
 
