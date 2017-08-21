@@ -280,7 +280,7 @@ class BucketlistItemAPI(MethodView):
                 if not get_results:
                     response = jsonify({
                         "status": "Fail",
-                        "message": "Bucketlist Does Not Exist",
+                        "message": "No Bucketlist Items Because Bucketlist Does Not Exist",
                     })
                     response.status_code = 404
 

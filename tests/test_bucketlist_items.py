@@ -629,7 +629,7 @@ class BucketlistTestCases(unittest.TestCase):
 
         data = json.loads(get_response_item.data)
         self.assertEqual(get_response_item.status_code, 404)
-        self.assertIn("Bucketlist Does Not Exist", data['message'])
+        self.assertIn("No Bucketlist Items Because Bucketlist", data['message'])
 
     def test_api_search_none_existent_bucketlist_item(self):
         """ Correct message is returned when search returns no result """
