@@ -4,6 +4,7 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from config import app_config
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
+from flask_cors import CORS, cross_origin
 
 # Initialise SQL-Alchemy
 database = SQLAlchemy()
@@ -33,6 +34,7 @@ def create_application(config_name):
     # Make app a restful api
     api.init_app(app)
     database.init_app(app)
+    CORS(app)
 
     return app
 
