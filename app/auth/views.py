@@ -1,3 +1,4 @@
+import datetime
 from flask import request, make_response, jsonify
 from app.models import User
 from flask.views import MethodView
@@ -46,7 +47,9 @@ class LoginAPI(MethodView):
             # User exists and password matches database password
             if user and user.is_password_valid(data['password']):
 
-                access_token = create_access_token(identity=user.id)
+                expires = datetime.timedelta(minutes=20)
+
+                access_token = create_access_token(identity=user.id, expires_delta=expires)
 
                 if access_token:
                     response = jsonify({
