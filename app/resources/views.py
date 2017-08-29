@@ -62,7 +62,7 @@ class BucketlistAPI(MethodView):
 
             else:
 
-                item_list = []
+                bucketlist_items = []
 
                 response = {
                     'id': bucketlist.id,
@@ -72,9 +72,9 @@ class BucketlistAPI(MethodView):
                 if bucketlist.items.all():
 
                     for item in bucketlist.items.all():
-                        item_list.append({item.item_id: item.item_name})
+                        bucketlist_items.append({item.item_id: item.item_name})
 
-                    response['items'] = item_list
+                    response['items'] = bucketlist_items
 
                 else:
                     response['items'] = []
@@ -119,15 +119,15 @@ class BucketlistAPI(MethodView):
 
                 item_list = []
 
-                for bucketlist in list_results['results']:
+                for bucket in list_results['results']:
                     result = {
-                        'id': bucketlist.id,
-                        'name': bucketlist.name
+                        'id': bucket.id,
+                        'name': bucket.name
                     }
 
-                    if bucketlist.items.all():
+                    if bucket.items.all():
 
-                        for item in bucketlist.items.all():
+                        for item in bucket.items.all():
                             item_list.append({item.item_id: item.item_name})
 
                         result['items'] = item_list
