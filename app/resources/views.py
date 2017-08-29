@@ -61,11 +61,25 @@ class BucketlistAPI(MethodView):
                 response.status_code = 404
 
             else:
-                response = jsonify({
+
+                item_list = []
+
+                response = {
                     'id': bucketlist.id,
                     'name': bucketlist.name
-                })
+                }
 
+                if bucketlist.items.all():
+
+                    for item in bucketlist.items.all():
+                        item_list.append({item.item_id: item.item_name})
+
+                    response['items'] = item_list
+
+                else:
+                    response['items'] = []
+
+                response = jsonify(response)
                 response.status_code = 200
 
         else:
@@ -103,11 +117,24 @@ class BucketlistAPI(MethodView):
 
                 final_list = []
 
+                item_list = []
+
                 for bucketlist in list_results['results']:
                     result = {
                         'id': bucketlist.id,
                         'name': bucketlist.name
                     }
+
+                    if bucketlist.items.all():
+
+                        for item in bucketlist.items.all():
+                            item_list.append({item.item_id: item.item_name})
+
+                        result['items'] = item_list
+
+                    else:
+                        result['items'] = []
+
                     final_list.append(result)
 
                 response = jsonify({"previous": list_results['previous'], "next": list_results['next'],
