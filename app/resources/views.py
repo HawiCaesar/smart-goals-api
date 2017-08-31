@@ -322,7 +322,7 @@ class BucketlistItemAPI(MethodView):
                             "message": "No Bucketlist Items in this Bucketlist",
                             "results": bucketlist.items.all()
                         })
-                        response.status_code = 404
+                        response.status_code = 200
 
                         return make_response(response)
 

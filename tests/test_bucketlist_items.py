@@ -137,7 +137,7 @@ class BucketlistTestCases(unittest.TestCase):
 
         data_item = json.loads(get_response_item.data)
 
-        self.assertEqual(get_response_item.status_code, 404)
+        self.assertEqual(get_response_item.status_code, 200)
         self.assertEqual(len(data_item['results']), 0)
         self.assertIn("No Bucketlist Items in this Bucketlist", data_item['message'])
 
