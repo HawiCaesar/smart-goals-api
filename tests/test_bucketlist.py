@@ -392,7 +392,8 @@ class BucketlistTestCases(unittest.TestCase):
         data = json.loads(get_response.data)
 
         self.assertEqual(get_response.status_code, 404)
-        self.assertIn('Bucketlist Does Not Exist', data['message'], "Wrong message returned")
+        self.assertIn('Bucketlists Do Not Exist', data['message'])
+        self.assertEqual(0, len(data['results']))
 
     def test_api_user_cannot_create_existing_bucketlist(self):
         """ Test Case: The API should refuse the user from recreating an existing bucketlist """
