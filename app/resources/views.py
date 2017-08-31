@@ -104,11 +104,11 @@ class BucketlistAPI(MethodView):
                 if not bucketlist_results:
 
                     response = jsonify({
-                        "status": "Fail",
+                        "status": "Success",
                         "message": "Bucketlists Do Not Exist",
                         "results": []
                     })
-                    response.status_code = 404
+                    response.status_code = 200
 
                     return make_response(response)
 
