@@ -129,7 +129,7 @@ class BucketlistAPI(MethodView):
                     if bucket.items.all():
 
                         for item in bucket.items.all():
-                            item_list.append({item.item_id: item.item_name})
+                            item_list.append({'item_id': item.item_id, 'item_name': item.item_name})
 
                         result['items'] = item_list
 
