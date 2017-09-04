@@ -99,7 +99,7 @@ class BucketlistAPI(MethodView):
                 else:
                     searchterm = '%' + query + '%'
                     bucketlist_results = Bucketlist.query.filter(Bucketlist.name.like(searchterm))\
-                        .filter_by(created_by=current_user).all()
+                        .filter_by(created_by=current_user).order_by(Bucketlist.id).all()
 
                 if not bucketlist_results:
 
