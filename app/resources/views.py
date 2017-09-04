@@ -163,11 +163,17 @@ class BucketlistAPI(MethodView):
             if bucketlist:
                 bucketlist.name = data.get("name")
                 bucketlist.save()
-                response = jsonify({
+                response = {
                     "status": "Success",
-                    "message": "Bucketlist successfully updated"
-                })
+                    "message": "Bucketlist successfully updated",
+                    "results": {
+                                "id": bucketlist.id,
+                                "name": bucketlist.name,
+                                "date": bucketlist.date_modified
 
+                            }
+                }
+                response = jsonify(response)
                 response.status_code = 200
 
             else:
