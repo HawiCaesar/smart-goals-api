@@ -55,7 +55,7 @@ class Bucketlist(database.Model):
         return "{} - {}".format(self.id, self.name)
 
     def get_all_bucketlists(user):
-        return Bucketlist.query.filter_by(created_by=user).order_by(Bucketlist.id).all()
+        return Bucketlist.query.filter_by(created_by=user).order_by(Bucketlist.date_created).all()
 
 
 class BucketlistItem(database.Model):
