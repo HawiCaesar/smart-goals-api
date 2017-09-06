@@ -138,7 +138,8 @@ class BucketlistAPI(MethodView):
 
                     final_list.append(result)
 
-                response = jsonify({"previous": list_results['previous'], "next": list_results['next'],
+                response = jsonify({"count": len(bucketlist_results),
+                                    "previous": list_results['previous'], "next": list_results['next'],
                                     "results": final_list})
                 response.status_code = 200
 
