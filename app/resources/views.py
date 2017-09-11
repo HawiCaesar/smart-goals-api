@@ -156,10 +156,19 @@ class BucketlistAPI(MethodView):
     @jwt_required
     def put(self, id):
         current_user = get_jwt_identity()
+        data = request.get_json()
+
+        if Bucketlist.query.filter_by(name=data.get("name"), created_by=current_user).first():
+            response = jsonify({
+                'status': "Fail",
+                'message': "Cannot update bucketlist with existing name"
+            })
+
+            response.status_code = 400
+            return make_response(response)
 
         if id:
             bucketlist = Bucketlist.query.filter_by(id=id, created_by=current_user).first()
-            data = request.get_json()
 
             if bucketlist:
                 bucketlist.name = data.get("name")
@@ -385,6 +394,15 @@ class BucketlistItemAPI(MethodView):
         data = request.get_json()
 
         current_user = get_jwt_identity()
+
+        if Bucketlist.query.filter_by(name=data.get("name"), created_by=current_user).first():
+            response = jsonify({
+                'status': "Fail",
+                'message': "Cannot update bucketlist item with existing name"
+            })
+
+            response.status_code = 400
+            return make_response(response)
 
         bucketlist_item = BucketlistItem.get_bucketlist_items(id, item_id, current_user)
 
