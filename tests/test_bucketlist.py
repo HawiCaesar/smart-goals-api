@@ -514,6 +514,40 @@ class BucketlistTestCases(unittest.TestCase):
 
         self.assertIn(data_both_params['message'], "Start Page and Limits should be numbers only")
 
+    def test_error_message_if_no_update_data(self):
+
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        update_response = self.client().put('/v1/api/bucketlists/1', data=json.dumps({"name": ""}),
+                                            headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                     "Content-Type": "application/json"})
+
+        data = json.loads(update_response.data)
+
+        self.assertEqual(update_response.status_code, 400)
+        self.assertIn("Bucketlist Name must be provided", data['message'])
+
+    def test_error_message_if_existing_name_given_on_update(self):
+
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        update_item = self.client().put('/v1/api/bucketlists/1', data=json.dumps(self.bucketlist3),
+                                        headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                 "Content-Type": "application/json"})
+
+        data = json.loads(update_item.data)
+
+        self.assertEqual(update_item.status_code, 400)
+        self.assertIn("Cannot update bucketlist with existing name", data['message'])
+
     def tearDown(self):
         """ Teardown all initialized variables and database """
         with self.app.app_context():
