@@ -55,7 +55,7 @@ class Bucketlist(database.Model):
         return "{} - {}".format(self.id, self.name)
 
     def get_all_bucketlists(user):
-        return Bucketlist.query.filter_by(created_by=user).all()
+        return Bucketlist.query.filter_by(created_by=user).order_by(Bucketlist.date_created).all()
 
 
 class BucketlistItem(database.Model):
@@ -79,6 +79,11 @@ class BucketlistItem(database.Model):
     def get_bucketlist_items(id, item_id, user):
         return BucketlistItem.query.filter_by(bucketlist_id=id, item_id=item_id)\
             .join(Bucketlist, BucketlistItem.bucketlist_id == Bucketlist.id)\
+            .filter_by(created_by=user).first()
+
+    def get_bucketlist_item_name(id, item_name, user):
+        return BucketlistItem.query.filter_by(bucketlist_id=id, item_name=item_name) \
+            .join(Bucketlist, BucketlistItem.bucketlist_id == Bucketlist.id) \
             .filter_by(created_by=user).first()
 
     def delete(self):
