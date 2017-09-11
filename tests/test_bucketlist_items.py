@@ -655,6 +655,49 @@ class BucketlistTestCases(unittest.TestCase):
         self.assertEqual(get_response_item.status_code, 404)
         self.assertIn("Bucketlist Item does not exist", data['message'])
 
+    def test_error_message_if_no_update_data(self):
+
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        update_item = self.client().put('/v1/api/bucketlists/1/items/1', data=json.dumps({"item_name": "",
+                                                                                          "complete_by": ""}),
+                                        headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                 "Content-Type": "application/json"})
+
+        data = json.loads(update_item.data)
+
+        self.assertEqual(update_item.status_code, 400)
+        self.assertIn("Item Name must be provided", data['message'])
+
+    def test_error_message_if_existing_name_given_on_update(self):
+
+        self.client().post('/v1/api/bucketlists/', data=json.dumps(self.bucketlist2),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item3),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        self.client().post('/v1/api/bucketlists/1/items/', data=json.dumps(self.bucketlist_item4),
+                           headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                    "Content-Type": "application/json"})
+
+        update_item = self.client().put('/v1/api/bucketlists/1/items/1', data=json.dumps(self.bucketlist_item4),
+                                        headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                 "Content-Type": "application/json"})
+
+        data = json.loads(update_item.data)
+
+        self.assertEqual(update_item.status_code, 400)
+        self.assertIn("Cannot update bucketlist item with existing name", data['message'])
+
     def tearDown(self):
         """ Teardown all initialized variables and database """
         with self.app.app_context():
