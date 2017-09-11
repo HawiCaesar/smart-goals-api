@@ -158,6 +158,15 @@ class BucketlistAPI(MethodView):
         current_user = get_jwt_identity()
         data = request.get_json()
 
+        if data.get("name") == "" or data.get("name") == " ":
+            response = jsonify({
+                'status': "Fail",
+                'message': "Bucketlist Name must be provided"
+            })
+
+            response.status_code = 400
+            return make_response(response)
+
         if Bucketlist.query.filter_by(name=data.get("name"), created_by=current_user).first():
             response = jsonify({
                 'status': "Fail",
@@ -395,7 +404,16 @@ class BucketlistItemAPI(MethodView):
 
         current_user = get_jwt_identity()
 
-        if Bucketlist.query.filter_by(name=data.get("name"), created_by=current_user).first():
+        if data.get('item_name') == "" or data.get('item_name') == " ":
+            response = jsonify({
+                'status': "Fail",
+                'message': "Item Name must be provided"
+            })
+
+            response.status_code = 400
+            return make_response(response)
+
+        if BucketlistItem.get_bucketlist_item_name(id, data.get('item_name'), current_user):
             response = jsonify({
                 'status': "Fail",
                 'message': "Cannot update bucketlist item with existing name"
