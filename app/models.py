@@ -81,6 +81,11 @@ class BucketlistItem(database.Model):
             .join(Bucketlist, BucketlistItem.bucketlist_id == Bucketlist.id)\
             .filter_by(created_by=user).first()
 
+    def get_bucketlist_item_name(id, item_name, user):
+        return BucketlistItem.query.filter_by(bucketlist_id=id, item_name=item_name) \
+            .join(Bucketlist, BucketlistItem.bucketlist_id == Bucketlist.id) \
+            .filter_by(created_by=user).first()
+
     def delete(self):
         database.session.delete(self)
         database.session.commit()
