@@ -99,10 +99,17 @@ class BucketlistTestCases(unittest.TestCase):
                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
                                                        "Content-Type": "application/json"})
 
+        get_response_item2 = self.client().get('/v1/api/bucketlists/',
+                                               headers={"Authorization": "Bearer " + self.access_token['access_token'],
+                                                        "Content-Type": "application/json"})
+
         data_item = json.loads(get_response_item.data)
+        data_item2 = json.loads(get_response_item2.data)
 
         self.assertEqual(get_response_item.status_code, 200)
+        self.assertEqual(get_response_item2.status_code, 200)
         self.assertIn("Travel to NYC, USA", data_item['results'][0]['item_name'])
+        self.assertIn("Travel to NYC, USA", data_item2['results'][0]['items'][0]['item_name'])
 
     def test_api_get_bucketlist_item_by_id(self):
         """ Get bucketlist item by id from database """
