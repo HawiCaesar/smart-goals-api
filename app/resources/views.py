@@ -436,7 +436,14 @@ class BucketlistItemAPI(MethodView):
 
             response = jsonify({
                 "status": "Success",
-                "message": "Bucketlist item successfully updated"
+                "message": "Bucketlist item successfuslly updated",
+                "item": {
+                    "item_id": bucketlist_item.item_id,
+                    "item_name": bucketlist_item.item_name,
+                    "complete_by": bucketlist_item.complete_by,
+                    "bucket_id": bucketlist_item.bucketlist_id,
+                    "done": bucketlist_item.done
+                }
             })
 
             response.status_code = 200
