@@ -54,34 +54,17 @@ Endpoint | Description
 ------------ | -------------
 POST /auth/register | Register user. Request should have name and password in form data.
 POST /auth/login | Login user. Session token is valid for 30 minutes.
------------- | -------------
-
-
-
-
-
 POST /auth/logout | Logout user.
-
 POST /bucketlists/ | Create a new bucket list. Request should have desc in form data.
-
 GET /bucketlists/ | List all the created bucket lists.
-
-GET /bucketlists/:id | Get single bucket list.
-
-PUT /bucketlists/:id | Update single bucket list. Request should have desc in form data.
-
-DELETE /bucketlists/:id	|Delete single bucket list.
-
-POST /bucketlists/:id/items	| Add a new item to this bucket list. Request should have goal in form data.
-
-PUT /bucketlists/:id/items/:item_id	| Update the bucket list completion status to true.
-
-DELETE /bucketlists/:id/items/:item_id | Delete this single bucket list item.
-
+GET /bucketlists/<id> | Get single bucket list.
+PUT /bucketlists/<id>| Update single bucket list. Request should have desc in form data.
+DELETE /bucketlists/<id> | Delete single bucket list.
+POST /bucketlists/<id>/items | Add a new item to this bucket list. Request should have goal in form data.
+PUT /bucketlists/<id>/items/<item_id> | Update the bucket list completion status to true.
+DELETE /bucketlists/<id>/items/<item_id> | Delete this single bucket list item.
 GET /bucketlists?limit=5 | Get 5 bucket list records belonging to user.
-
-GET /bucketlists?q=draw	| Search for bucket lists with draw in desc.
-
+GET /bucketlists?q=draw	| Search for bucket lists with phrase or words draw
 
 ## Hosted on Heroku
 https://demo-smart-goals-api.herokuapp.com/
