@@ -24,15 +24,8 @@ class TestingConfig():
     SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/test_db'
     SECRET_KEY = "This-is-a-T3sT-K3Y"
 
-
-class ProductionConfig(Config):
-    # Production configurations
-    DEBUG = False
-
-
 app_config = {
     "development": DevelopmentConfig(),
-    "testing": TestingConfig(),
-    "production": ProductionConfig()
+    "testing": TestingConfig()
 }
 
