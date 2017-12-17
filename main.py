@@ -1,6 +1,6 @@
 import os
 
-from bucketlist import create_application
+from app import create_application
 
 config_name = os.getenv('APP_SETTINGS')  # config_name = "development"
 app = create_application(config_name)

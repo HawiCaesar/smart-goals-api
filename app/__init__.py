@@ -4,6 +4,7 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from config import app_config
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
+from flask_cors import CORS, cross_origin
 
 # Initialise SQL-Alchemy
 database = SQLAlchemy()
@@ -20,19 +21,20 @@ def create_application(config_name):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Register endpoints
-    from .core_app import core_app as bucketlist_blueprint
+    from .resources import resources as bucketlist_blueprint
     app.register_blueprint(bucketlist_blueprint)
 
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint)
 
-    from bucketlist.models import User
+    from app.models import User
     global jwt
     jwt = JWTManager(app)
 
     # Make app a restful api
     api.init_app(app)
     database.init_app(app)
+    CORS(app)
 
     return app
 

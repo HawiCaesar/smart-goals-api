@@ -1,6 +1,6 @@
 [run]
 source =
-    bucketlist/
+    app/
     tests/
 
 [report]

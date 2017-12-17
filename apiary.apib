@@ -65,7 +65,7 @@ Smart Goals allows you to register and achieve all these feats and also allows y
             "message": "User has logged in!"
         }
 
-## Create Bucketlist & Read All Bucketlists for partiuclar user [/v1/api/bucketlists/{?start,limit,q}]
+## Bucketlists [/v1/api/bucketlists/{?start,limit,q}]
 ### Create Bucketlist [POST]
 Create Non-existing Bucketlist (200), Create Existing Bucketlist (409)
 + Request (application/json)
@@ -93,7 +93,7 @@ Create Non-existing Bucketlist (200), Create Existing Bucketlist (409)
         }
         
 
-### Read All Bucketlists for partiuclar user [GET]
+### Get Bucketlists [GET]
 + Parameters
     + start (optional) - start on specific page, 1 is default
     + limit (optional) - limit the results, default is 3
@@ -134,12 +134,12 @@ Create Non-existing Bucketlist (200), Create Existing Bucketlist (409)
         
 
         
-## Read, Update and Delete bucketlist for user [/v1/api/bucketlists/{id}]
+## Bucketlist [/v1/api/bucketlists/{id}]
 + Parameters
     + id (number) - ID of the Bucketlist to read, update or delete
 
 
-### Read particular bucketlist [GET]
+### Get Bucketlist [GET]
 + Request (application/json)
    + Headers
 
@@ -159,7 +159,7 @@ Create Non-existing Bucketlist (200), Create Existing Bucketlist (409)
             "message": "Bucketlist Does Not Exist"
         }
 
-### Update particular bucketlist [PUT]
+### Update Bucketlist [PUT]
 + Request (application/json)
    + Headers
 
@@ -185,7 +185,7 @@ Create Non-existing Bucketlist (200), Create Existing Bucketlist (409)
         }
 
 
-### Delete particular bucketlist [DELETE]
+### Delete Bucketlist [DELETE]
 + Request (application/json)
    + Headers
 
@@ -206,7 +206,7 @@ Create Non-existing Bucketlist (200), Create Existing Bucketlist (409)
         }
 
 
-## Create bucketlist items & Read all bucketlist items for user [/v1/api/bucketlists/{id}/items/?{start,limit,q}]
+## Bucketlist Items [/v1/api/bucketlists/{id}/items/?{start,limit,q}]
 ### Create Bucketlist Item [POST]
 Create Non-existing Bucketlist Item (200), Create Existing Bucketlist Item(409)
 + Request (application/json)
@@ -234,7 +234,7 @@ Create Non-existing Bucketlist Item (200), Create Existing Bucketlist Item(409)
             "message": "Bucketlist Item Already Exists"
         }
         
-### Read all Bucketlist Items in Bucketlist [GET]
+### Get Bucketlist Items in Bucketlist [GET]
 Read all bucketlist items without start, limit or q parameters passed
 + Parameters
     + id (number) - ID of the Bucketlist
@@ -288,7 +288,7 @@ Read all bucketlist items without start, limit or q parameters passed
             "message": "No bucketlist item matching your query in exists"
         }
 
-## Read, Update, Delete Bucketlist Item in Bucketlist [/v1/api/bucketlists/{id}/items/{item_id}]
+## Bucketlist Item [/v1/api/bucketlists/{id}/items/{item_id}]
 + Parameters
     + id (number) - ID of the Bucketlist
     + item_id (number) - ID for the bucketlist item
